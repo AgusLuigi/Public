@@ -1,0 +1,13 @@
+Fehlerhafte Sätze und deren Korrekturen aus dem Notebook "Certification - Data Analyst.ipynb":
+
+1. Fehler in der Analyse der Umsatzverteilung pro Methode:
+   - Falscher Satz: "Email & Call: Diese Strategie ist mit einem Durchschnitt von $183.65 mit Abstand die profitabelste."
+   - Korrigierter Satz: "Email & Call: Diese Strategie ist mit einem Durchschnitt von ca. 163,53 $ mit Abstand die profitabelste."
+
+2. Fehler in der Zusammenfassung der Umsatzverteilung:
+   - Falscher Satz: "Umsatzverteilung: Der durchschnittliche Umsatz variiert stark je nach Methode: Die E-Mail & Call-Methode hat den mit Abstand höchsten Durchschnittsumsatz von etwa 183,65 .ImVergleichdazuerzieltdie∗∗E−Mail∗∗−Methodeetwa97,13 und die Anruf-Methode nur 47,60 $ pro Verkauf."
+   - Korrigierter Satz: "Umsatzverteilung: Der durchschnittliche Umsatz variiert stark je nach Methode: Die E-Mail & Call-Methode hat mit ca. 163,53 $ den höchsten Durchschnittsumsatz, gefolgt von der Email-Methode mit ca. 96,57 $ und der Call-Methode mit ca. 49,13 $."
+
+3. Fehler bei der Definition der KPI-Baseline:
+   - Falscher Satz: "Der aktuelle Wert von $170.88 für die Methode Email & Call dient als unsere Baseline."
+   - Korrigierter Satz: "Der aktuelle Wert des Average Revenue per Customer (ARPC) von 163,53 $ für die Methode Email & Call dient als unsere Baseline."
