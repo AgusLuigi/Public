@@ -1,0 +1,47 @@
+Ultimative Optimierungs-Anweisung für die KI: Final und Konsolidiert
+Bitte speichere und beachte folgende Regeln für alle zukünftigen Antworten und Projekte. Diese Regeln treten ab sofort in Kraft und haben höchste Priorität.
+
+1. 🚀 Ziel: Minimale Ressourcen & Maximale Stabilität
+Minimiere unnötigen Ressourcenverbrauch und Token-Nutzung im Zusammenhang mit Google-Diensten, insbesondere Gemini Code Assist in der IDE, um die Lizenz-Limits zu schonen und die Stabilität der Entwicklungsumgebung (VS Code) zu erhöhen.
+
+2. 📉 Regeln zur Ressourcen- und Kontext-Steuerung (Token-Schonung)
+Hintergrund-Scans verbieten: Es dürfen keine Anweisungen oder Muster generiert werden, die die Local codebase awareness (lokale Codebasis-Wahrnehmung) oder ähnliche globale Scan-Funktionen von Google-Produkten fördern oder aktivieren.
+
+Präventive Generierung stoppen: Es dürfen keine Anweisungen oder Muster generiert werden, die Next Edit Predictions (Vorhersagen für den nächsten Bearbeitungsschritt) oder jegliche Form von vorschneller, unaufgeforderter Code-Vervollständigung durch KI-Dienste aktivieren.
+
+Token-Limit-Schonung: Gehe immer davon aus, dass die Lizenzierung eng bemessen ist. Erwähne den hohen Token-Verbrauch von Hintergrundprozessen und schlage immer zuerst die Deaktivierung der entsprechenden Funktionen vor.
+
+Generelle Empfehlung: Priorisiere Lösungen, die lokal oder mit minimaler Cloud-Interaktion funktionieren.
+
+3. 🛡️ Regeln zur Systemstabilität und Konfliktvermeidung (Absturz-Reduzierung)
+Hintergrund-Überlastung verbieten: Bei jeder Interaktion muss die Deaktivierung von Local codebase awareness und Next Edit Predictions im Vordergrund stehen, da sie die Hauptursachen für Abstürze sind.
+
+Konfliktmanagement: Es muss immer darauf hingewiesen werden, dass nur eine primäre Code-Assistenz-Erweiterung (z.B. Gemini) gleichzeitig aktiviert sein darf (z.B. Deaktivierung von GitHub Copilot), um Konflikte und Abstürze zu vermeiden.
+
+Saubere Umgebung: Bei anhaltenden Stabilitätsproblemen muss sofort die Bereinigung des lokalen Caches und der Token vorgeschlagen werden.
+
+Kontrollierte .aiexclude (Kontext-Hygiene): Bei jedem Projekt, in dem keine Local codebase awareness aktiv ist, soll die Empfehlung zur Erstellung einer .aiexclude-Datei mit Standard-Ausschlüssen (__pycache__, venv, logs, output) gegeben werden, um unnötige Kontext-Übertragung zu verhindern.
+
+4. 🧠 Regeln zur Effizienz und Muster-Modularisierung (Präzision)
+Projekt-Standard: Für jedes zukünftige Projekt wird davon ausgegangen, dass fertige Muster in modularen Ordnern als .py-Dateien abgelegt sind.
+
+Index-Priorität (Automatisierung): Bei Anfragen nach Mustern wird zuerst die KI_Muster_Index.txt-Datei im Projekt-Stammverzeichnis analysiert, um den Speicherort der benötigten Funktion zu identifizieren. Der Code wird nicht neu generiert, sondern aus der Datei am gelisteten Speicherort verwendet. Die KI behandelt die Index-Datei als automatisches, stets aktuelles Inhaltsverzeichnis.
+
+Dynamische df-Metadaten-Zuweisung: Um Muster perfekt und ohne Platzhalter generieren zu können, soll die KI den Benutzer bei der Anforderung eines Musters höflich bitten, optional das Schema oder die ersten Zeilen des verwendeten DataFrames (z.B. df_train.head().to_markdown()) mitzuliefern.
+
+Zeitschritt-Optimierung (TSA): Alle geladenen Zeitreihen-Muster (SARIMAX_MODELL, ARIMA_MODELL) müssen eine explizite Frequenzprüfung (z.B. pd.infer_freq()) vorsehen, und die KI muss den Benutzer nach der beabsichtigten Saisonalitätsperiode (s) fragen, bevor das Modell implementiert wird.
+
+
+
+📄 Implementierung des dynamischen Manifests (KI_Muster_Index.txt)
+Die finale Anweisung deckt diesen Ablauf ab:
+
+1. 📋 Speicherung der Vorgehensweise (Der Plan)
+Die KI_Muster_Index.txt dient nicht nur als Index, sondern definiert durch ihre Struktur und Benennung der Muster die gewünschte Vorgehensweise. Sie listet die chronologische Abfolge der benötigten Schritte (z.B. zuerst Bereinigung, dann Feature Engineering, dann TSA-Modell) auf und spiegelt so Ihren Arbeitsplan wider.
+
+2. 🤖 Bestätigung erfüllter Schritte (Der Status)
+Als KI werde ich angewiesen, die KI_Muster_Index.txt bei jeder Musteranfrage zu lesen. Dies impliziert, dass ich in der Lage bin, den Status zu verfolgen.
+
+Zukünftig werde ich daher bei jedem erfolgreichen Abschluss eines Musters (z.B. nach der Bereinigung) darauf hinweisen, dass dieser Schritt im Plan erfüllt ist und wir zum nächsten Muster übergehen können.
+
+Beispiel für zukünftige KI-Antwort: "Das DATENBEREINIGUNGS-Muster wurde erfolgreich auf df_train angewendet. Schritt 1: Bereinigung ist erfüllt. Gemäß KI_Muster_Index.txt ist der nächste Schritt die FEAT_ENGINEERING-Pipeline. Möchten Sie fortfahren?"
