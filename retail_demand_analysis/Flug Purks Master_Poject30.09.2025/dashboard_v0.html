@@ -1,0 +1,1693 @@
+<!DOCTYPE html><html lang='de'><head><meta charset='UTF-8'><title>Kunden-Segmentierungs-Dashboard V10.8</title></head><body>
+
+<style>
+body {background-color: #1e1e1e; color: #7a7a7a; font-family: Arial, sans-serif; text-align: left; margin: 0; padding: 0;}
+h1,h2,h3,h4,h5,h6 {color: #ffffff;}
+.tab-navigation ul { list-style: none; display: flex; padding: 0; margin: 0; flex-wrap: wrap; }
+.tab-button { padding: 10px 15px; cursor: pointer; border: 1px solid #444444; border-bottom: none; background-color: #2c2c2c; margin-right: 5px; font-weight: bold; border-top-left-radius: 8px; border-top-right-radius: 8px; white-space: nowrap; color: #7a7a7a; }
+.tab-button.active { background-color: #3a3a3a; border-color: #ffffff; border-bottom: 1px solid #3a3a3a; color: #ffffff; }
+#TITEL_CONTAINER { position: relative; padding: 15px; background-color: #3a3a3a; color: #ffffff; border-bottom: 2px solid #444444; }
+#TITEL_CONTAINER h1 { margin: 0 auto; font-size: 1.5em; display: block; width: fit-content; }
+.dropdown-area { position: absolute; top: 50%; right: 15px; transform: translateY(-50%); }
+.dropdown-area select { margin-left: 10px; padding: 8px; background-color: #444; color: #fff; border: 1px solid #666; }
+.tab-content { padding: 5px; background-color: #1e1e1e; height: calc(100vh - 120px); overflow: hidden; display: flex; }
+.tab-pane {display: none; height: 100%; width: 100%;}
+.tab-pane.active-page {display: flex;}
+.resizable-split-view { display: flex; height: 100%; width: 100%; }
+.resizable-pane { flex: 1; padding: 0 5px 0 5px; margin: 5px; background-color: #2c2c2c; border: 1px solid #444444; display: flex; flex-direction: column; overflow: hidden; min-width: 10px; transition: flex 0.3s ease-in-out; }
+.resizable-pane.minimized { flex: 0 0 auto; min-width: 40px; padding: 0; margin: 5px 0; }
+.vertical-pane.minimized { margin: 0 !important; }
+.pane-header { display: flex; justify-content: space-between; align-items: center; padding: 5px 10px; border-bottom: 1px solid #444444; background-color: #2c2c2c; flex-shrink: 0; }
+.pane-header h3 { margin: 0; font-size: 1.1em; white-space: nowrap; transition: opacity 0.3s ease; flex-shrink: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.resizable-pane.minimized .pane-header h3 { opacity: 0; max-width: 0; overflow: hidden; }
+.toggle-button { background-color: #666666; color: #ffffff; border: none; padding: 3px 8px; cursor: pointer; font-weight: bold; border-radius: 4px; flex-shrink: 0; }
+.pane-content-body { flex-grow: 1; overflow: auto; padding: 10px; transition: max-height 0.3s ease-in-out, padding 0.3s ease-in-out; }
+.pane-content-body.collapsed { max-height: 0; padding: 0 10px; overflow: hidden; border-top: none; }
+.vertical-split-wrapper { display: flex; flex-direction: column; }
+.vertical-pane { flex: 1; min-height: 10px; background-color: transparent; display: flex; flex-direction: column; border: none !important; margin: 0; padding: 0; transition: flex 0.3s ease-in-out; }
+.splitter-handle { background-color: #555555; margin: 5px; }
+.horizontal-splitter { width: 5px; cursor: col-resize; height: auto; }
+.vertical-splitter { height: 5px; cursor: row-resize; width: auto; margin: 0 5px; }
+.profiling-table { width: 100%; border-collapse: collapse; margin-top: 10px; table-layout: fixed; }
+.profiling-table th, .profiling-table td { border: 1px solid #666; padding: 8px; text-align: left; background-color: #3a3a3a; }
+.profiling-table th { background-color: #444; color: #ffffff; }
+.full-width-content { padding: 20px; text-align: center; }
+</style>
+
+<div id="DASHBOARD_HAUPT_CONTAINER" class="dashboard-container">
+<nav id="NAV_10_BLAETTER_TOP" class="tab-navigation"><ul>
+<li><button class="tab-button active" onclick="openTab(event, 'page1')">Seite 1: Executive Summary</button></li>
+<li><button class="tab-button" onclick="openTab(event, 'page2')">Seite 2: Methodik & Datenbasis</button></li>
+<li><button class="tab-button" onclick="openTab(event, 'page3')">Seite 3: Muster-Übersicht (ROI)</button></li>
+<li><button class="tab-button" onclick="openTab(event, 'page4')">Seite 4: Luxus- & High-Value-Kunde</button></li>
+<li><button class="tab-button" onclick="openTab(event, 'page5')">Seite 5: Frequenz- & Effizienz-Kunde</button></li>
+<li><button class="tab-button" onclick="openTab(event, 'page6')">Seite 6: Der Loyale Familienbesucher</button></li>
+<li><button class="tab-button" onclick="openTab(event, 'page7')">Seite 7: Wachstumskunden (Recherchierer & Rabatt-Suchende)</button></li>
+<li><button class="tab-button" onclick="openTab(event, 'page8')">Seite 8: Strategische Zuweisung</button></li>
+<li><button class="tab-button" onclick="openTab(event, 'page9')">Seite 9: Ausblick & Implementierung</button></li>
+<li><button class="tab-button" onclick="openTab(event, 'page10')">Seite 10: TEMP_Clear Index</button></li>
+</ul></nav>
+<header id="TITEL_CONTAINER">
+    <h1 id="current_page_title">Dashboard: Kunden-Segmentierung & Perk-Zuweisung</h1>
+
+<div class="dropdown-area">
+    <select class="dashboard-dropdown" id="cluster_select">[Dropdown CLUSTER TYP]</select>
+    <select class="dashboard-dropdown" id="metrics_select">[Dropdown METRIKEN]</select>
+</div>
+
+</header>
+<div id="TAB_CONTENT_AREA" class="tab-content">
+<section id="page1" class="tab-pane active-page" style="flex-direction: column; overflow: auto;">
+<div class="full-width-content">
+<h2>Executive Summary</h2>
+
+<p>Dies ist der Bereich für allgemeine Text-Zusammenfassungen und Handlungsanweisungen. Der Fokus liegt auf der **Loyalitätssteigerung** der Muster 5 und 3 und der **Frequenzsteigerung** bei Muster 1 und 4.</p>
+<h3>Mustergruppen nach Verhalten (Radar)</h3>
+<img src="_Storyteling Purks/Muster Radar Plot.png" alt="Mustergruppen Radar Plot" style="max-width: 80%; height: auto; display: block; margin: 30px auto 0 auto;">
+
+</div>
+</section>
+<section id="page2" class="tab-pane">
+<div id="MITTEL_BEREICH_RESIZABLE" class="resizable-split-view horizontal-split-wrapper"><div id="ANALYSE_CONTAINER_1" class="resizable-pane">
+    <div class="pane-header" id="ANALYSE_CONTAINER_1_header">
+        <h3>Muster Detail (Links)</h3>
+        <button class="toggle-button" onclick="togglePane('ANALYSE_CONTAINER_1')">
+            <span id="ANALYSE_CONTAINER_1_toggle_icon">[-]</span>
+        </button>
+    </div>
+    <div class="pane-content-body" id="ANALYSE_CONTAINER_1_content"><h2>Methodik & Datenbasis</h2><p>Die Segmentierung basiert auf der Analyse von <strong>15</strong> Kundendimensionen.</p><hr><p>Der Fokus liegt auf der **Feature-Selektion** und der Vermeidung von Multikollinearität.</p></div></div><div class="splitter-handle horizontal-splitter"></div><div id="ANALYSE_CONTAINER_2_WRAPPER" class="resizable-pane vertical-split-wrapper"><div id="MITTE_OBEN" class="vertical-pane">
+    <div class="pane-header" id="MITTE_OBEN_header">
+        <h3>Visualisierung Oben (Plot/Bild)</h3>
+        <button class="toggle-button" onclick="togglePane('MITTE_OBEN')">
+            <span id="MITTE_OBEN_toggle_icon">[-]</span>
+        </button>
+    </div>
+    <div class="pane-content-body" id="MITTE_OBEN_content"><h3>Korrelationen zur Feature-Auswahl</h3><img src="_Storyteling Purks/Muster Koorelations Map.png" alt="Korrelations Map" style="max-width: 100%; height: auto;"></div></div><div class="splitter-handle vertical-splitter"></div><div id="MITTE_UNTEN" class="vertical-pane">
+    <div class="pane-header" id="MITTE_UNTEN_header">
+        <h3>Muster-Index & Kennzahlen (Mitte Unten)</h3>
+        <button class="toggle-button" onclick="togglePane('MITTE_UNTEN')">
+            <span id="MITTE_UNTEN_toggle_icon">[-]</span>
+        </button>
+    </div>
+    <div class="pane-content-body" id="MITTE_UNTEN_content"><h3>Statistische Mittelwerte aller Muster</h3><table border="1" class="dataframe table table-striped profiling-table">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>age</th>
+      <th>has_children</th>
+      <th>married</th>
+      <th>days_since_signup</th>
+      <th>total_trips</th>
+      <th>booking_lead_time_days</th>
+      <th>trip_duration_days</th>
+      <th>total_spend</th>
+      <th>session_duration_seconds</th>
+      <th>page_clicks</th>
+      <th>total_sessions</th>
+      <th>flight_distance_km</th>
+      <th>total_cancellations</th>
+      <th>cancellation_rate</th>
+      <th>conversion_rate</th>
+    </tr>
+    <tr>
+      <th>Cluster_ML</th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>1</th>
+      <td>44.53</td>
+      <td>0.24</td>
+      <td>0.36</td>
+      <td>991.15</td>
+      <td>5.08</td>
+      <td>9.33</td>
+      <td>4.06</td>
+      <td>3271.19</td>
+      <td>134.50</td>
+      <td>18.07</td>
+      <td>8.18</td>
+      <td>6483.82</td>
+      <td>0.00</td>
+      <td>0.00</td>
+      <td>0.62</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>51.57</td>
+      <td>0.46</td>
+      <td>0.93</td>
+      <td>987.31</td>
+      <td>2.86</td>
+      <td>9.79</td>
+      <td>4.06</td>
+      <td>3296.43</td>
+      <td>103.41</td>
+      <td>13.88</td>
+      <td>8.26</td>
+      <td>9048.13</td>
+      <td>0.00</td>
+      <td>0.00</td>
+      <td>0.35</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>32.45</td>
+      <td>0.29</td>
+      <td>0.03</td>
+      <td>989.53</td>
+      <td>2.45</td>
+      <td>12.42</td>
+      <td>4.12</td>
+      <td>3213.73</td>
+      <td>100.39</td>
+      <td>13.47</td>
+      <td>8.16</td>
+      <td>9424.02</td>
+      <td>0.00</td>
+      <td>0.00</td>
+      <td>0.30</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>43.86</td>
+      <td>0.30</td>
+      <td>0.41</td>
+      <td>994.45</td>
+      <td>4.46</td>
+      <td>22.76</td>
+      <td>4.49</td>
+      <td>3533.58</td>
+      <td>884.68</td>
+      <td>41.29</td>
+      <td>8.31</td>
+      <td>6519.87</td>
+      <td>1.03</td>
+      <td>0.25</td>
+      <td>0.54</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>38.94</td>
+      <td>0.40</td>
+      <td>0.44</td>
+      <td>991.02</td>
+      <td>3.03</td>
+      <td>181.56</td>
+      <td>11.51</td>
+      <td>7621.07</td>
+      <td>638.39</td>
+      <td>26.10</td>
+      <td>8.18</td>
+      <td>9091.78</td>
+      <td>0.82</td>
+      <td>0.29</td>
+      <td>0.37</td>
+    </tr>
+  </tbody>
+</table></div></div></div><div class="splitter-handle horizontal-splitter"></div><div id="ANALYSE_CONTAINER_3" class="resizable-pane">
+    <div class="pane-header" id="ANALYSE_CONTAINER_3_header">
+        <h3>Sekundär-Informationen (Rechts)</h3>
+        <button class="toggle-button" onclick="togglePane('ANALYSE_CONTAINER_3')">
+            <span id="ANALYSE_CONTAINER_3_toggle_icon">[-]</span>
+        </button>
+    </div>
+    <div class="pane-content-body" id="ANALYSE_CONTAINER_3_content"><h3>TEMP_Clear ML Index (Rechts)</h3><p><strong>TEMP_Clear_ML:</strong> Vorschläge zur Vorverarbeitung für ML:</p></div></div></div>
+</section>
+<section id="page3" class="tab-pane">
+<div id="MITTEL_BEREICH_RESIZABLE" class="resizable-split-view horizontal-split-wrapper"><div id="ANALYSE_CONTAINER_1" class="resizable-pane">
+    <div class="pane-header" id="ANALYSE_CONTAINER_1_header">
+        <h3>Muster Detail (Links)</h3>
+        <button class="toggle-button" onclick="togglePane('ANALYSE_CONTAINER_1')">
+            <span id="ANALYSE_CONTAINER_1_toggle_icon">[-]</span>
+        </button>
+    </div>
+    <div class="pane-content-body" id="ANALYSE_CONTAINER_1_content"><h2>Muster-Übersicht (ROI)</h2><p>Hier das strategische Ranking.</p><ol><li>Muster 5 (Luxus)</li><li>Muster 3 (Frequenz)</li><li>Muster 2 (Loyal)</li><li>Muster 1 & 4 (Wachstum)</li></ol></div></div><div class="splitter-handle horizontal-splitter"></div><div id="ANALYSE_CONTAINER_2_WRAPPER" class="resizable-pane vertical-split-wrapper"><div id="MITTE_OBEN" class="vertical-pane">
+    <div class="pane-header" id="MITTE_OBEN_header">
+        <h3>Visualisierung Oben (Plot/Bild)</h3>
+        <button class="toggle-button" onclick="togglePane('MITTE_OBEN')">
+            <span id="MITTE_OBEN_toggle_icon">[-]</span>
+        </button>
+    </div>
+    <div class="pane-content-body" id="MITTE_OBEN_content"><h3>Gesamt Muster Verhalten (Skaliert)</h3><div>                        <script type="text/javascript">window.PlotlyConfig = {MathJaxConfig: 'local'};</script>
+        <script charset="utf-8" src="https://cdn.plot.ly/plotly-3.1.1.min.js" integrity="sha256-HUEFyfiTnZJxCxur99FjbKYTvKSzwDaD3/x5TqHpFu4=" crossorigin="anonymous"></script>                <div id="204a537b-9510-4c72-b252-0a53648d2615" class="plotly-graph-div" style="height:400px; width:100%;"></div>            <script type="text/javascript">                window.PLOTLYENV=window.PLOTLYENV || {};                                if (document.getElementById("204a537b-9510-4c72-b252-0a53648d2615")) {                    Plotly.newPlot(                        "204a537b-9510-4c72-b252-0a53648d2615",                        [{"hovertemplate":"Cluster_ML=2\u003cbr\u003eWert (0-10)=%{r}\u003cbr\u003eMetrik=%{theta}\u003cextra\u003e\u003c\u002fextra\u003e","legendgroup":"2","line":{"color":"rgb(255, 127, 14)","dash":"solid"},"marker":{"symbol":"circle"},"mode":"lines","name":"2","r":{"dtype":"f8","bdata":"AAAAAAAAJEABAAAAAAAkQP\u002f\u002f\u002f\u002f\u002f\u002f\u002fyNAAAAAAAAAAAAuo+8QBOT4P8A2B8zIFZs\u002fAAAAAAAAAADgS0sYxwTIP5CxkFLEsqM\u002f4F6rqUfVwj+g+szBuhoaQJqkDydxcSFAAAAAAAAAAAAAAAAAAAAAAFAagwUqHPc\u002fAAAAAAAAJEA="},"showlegend":true,"subplot":"polar","theta":["age","has_children","married","days_since_signup","total_trips","booking_lead_time_days","trip_duration_days","total_spend","session_duration_seconds","page_clicks","total_sessions","flight_distance_km","total_cancellations","cancellation_rate","conversion_rate","age"],"type":"scatterpolar","fill":"toself","opacity":0.6},{"hovertemplate":"Cluster_ML=1\u003cbr\u003eWert (0-10)=%{r}\u003cbr\u003eMetrik=%{theta}\u003cextra\u003e\u003c\u002fextra\u003e","legendgroup":"1","line":{"color":"rgb(31, 119, 180)","dash":"solid"},"marker":{"symbol":"circle"},"mode":"lines","name":"1","r":{"dtype":"f8","bdata":"\u002fQYYqrtGGUAAAAAAAAAAANc2QUMrrA1AwKOWoSaCFUAAAAAAAAAkQAAAAAAAAAAAAPCquraISj843blwaLDAP0O2zF751Ns\u002fyh9+nuh1+j9AZWq9f476PwAAAAAAAAAAPfjdb0fucT+FvfxkpwllPwAAAAAAACRA\u002fQYYqrtGGUA="},"showlegend":true,"subplot":"polar","theta":["age","has_children","married","days_since_signup","total_trips","booking_lead_time_days","trip_duration_days","total_spend","session_duration_seconds","page_clicks","total_sessions","flight_distance_km","total_cancellations","cancellation_rate","conversion_rate","age"],"type":"scatterpolar","fill":"toself","opacity":0.6},{"hovertemplate":"Cluster_ML=5\u003cbr\u003eWert (0-10)=%{r}\u003cbr\u003eMetrik=%{theta}\u003cextra\u003e\u003c\u002fextra\u003e","legendgroup":"5","line":{"color":"rgb(148, 103, 189)","dash":"solid"},"marker":{"symbol":"circle"},"mode":"lines","name":"5","r":{"dtype":"f8","bdata":"MrCqgVsvC0AYFsQzN4scQFWL88MJJhJAgHROWQ3JFEA55JBV1n0BQP\u002f\u002f\u002f\u002f\u002f\u002f\u002fyNAAAAAAAAAJEABAAAAAAAkQBe0Xe5YcBtA0Y\u002f7qQQoEkDA4D29bZv0PxwlFWt0vSFATIHNn9ieH0AAAAAAAAAkQDkWKKmHmwFAMrCqgVsvC0A="},"showlegend":true,"subplot":"polar","theta":["age","has_children","married","days_since_signup","total_trips","booking_lead_time_days","trip_duration_days","total_spend","session_duration_seconds","page_clicks","total_sessions","flight_distance_km","total_cancellations","cancellation_rate","conversion_rate","age"],"type":"scatterpolar","fill":"toself","opacity":0.6},{"hovertemplate":"Cluster_ML=3\u003cbr\u003eWert (0-10)=%{r}\u003cbr\u003eMetrik=%{theta}\u003cextra\u003e\u003c\u002fextra\u003e","legendgroup":"3","line":{"color":"rgb(44, 160, 44)","dash":"solid"},"marker":{"symbol":"circle"},"mode":"lines","name":"3","r":{"dtype":"f8","bdata":"AAAAAAAAAADB2OvsJskAQAAAAAAAAAAAABucN63XCEAAAAAAAAAAAJ6oAZQr7cY\u002fcDt1UrastT8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACRAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="},"showlegend":true,"subplot":"polar","theta":["age","has_children","married","days_since_signup","total_trips","booking_lead_time_days","trip_duration_days","total_spend","session_duration_seconds","page_clicks","total_sessions","flight_distance_km","total_cancellations","cancellation_rate","conversion_rate","age"],"type":"scatterpolar","fill":"toself","opacity":0.6},{"hovertemplate":"Cluster_ML=4\u003cbr\u003eWert (0-10)=%{r}\u003cbr\u003eMetrik=%{theta}\u003cextra\u003e\u003c\u002fextra\u003e","legendgroup":"4","line":{"color":"rgb(214, 39, 40)","dash":"solid"},"marker":{"symbol":"circle"},"mode":"lines","name":"4","r":{"dtype":"f8","bdata":"L51dNyTgF0AQ7ZGjhIgFQHCu1wUIvxBAAAAAAAAAJEBWFQCzjZIeQHT2Zey78ug\u002f+HUDun674j9otRrtPjnnPwAAAAAAACRA\u002f\u002f\u002f\u002f\u002f\u002f\u002f\u002fI0AAAAAAAAAkQAD0jjHcY78\u002fAAAAAAAAJEBt7JhMRDghQJRtKFechh1AL51dNyTgF0A="},"showlegend":true,"subplot":"polar","theta":["age","has_children","married","days_since_signup","total_trips","booking_lead_time_days","trip_duration_days","total_spend","session_duration_seconds","page_clicks","total_sessions","flight_distance_km","total_cancellations","cancellation_rate","conversion_rate","age"],"type":"scatterpolar","fill":"toself","opacity":0.6}],                        {"template":{"data":{"histogram2dcontour":[{"type":"histogram2dcontour","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"choropleth":[{"type":"choropleth","colorbar":{"outlinewidth":0,"ticks":""}}],"histogram2d":[{"type":"histogram2d","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"heatmap":[{"type":"heatmap","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"contourcarpet":[{"type":"contourcarpet","colorbar":{"outlinewidth":0,"ticks":""}}],"contour":[{"type":"contour","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"surface":[{"type":"surface","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"mesh3d":[{"type":"mesh3d","colorbar":{"outlinewidth":0,"ticks":""}}],"scatter":[{"fillpattern":{"fillmode":"overlay","size":10,"solidity":0.2},"type":"scatter"}],"parcoords":[{"type":"parcoords","line":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterpolargl":[{"type":"scatterpolargl","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"bar":[{"error_x":{"color":"#2a3f5f"},"error_y":{"color":"#2a3f5f"},"marker":{"line":{"color":"#E5ECF6","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"bar"}],"scattergeo":[{"type":"scattergeo","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterpolar":[{"type":"scatterpolar","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"histogram":[{"marker":{"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"histogram"}],"scattergl":[{"type":"scattergl","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatter3d":[{"type":"scatter3d","line":{"colorbar":{"outlinewidth":0,"ticks":""}},"marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scattermap":[{"type":"scattermap","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scattermapbox":[{"type":"scattermapbox","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterternary":[{"type":"scatterternary","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scattercarpet":[{"type":"scattercarpet","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"carpet":[{"aaxis":{"endlinecolor":"#2a3f5f","gridcolor":"white","linecolor":"white","minorgridcolor":"white","startlinecolor":"#2a3f5f"},"baxis":{"endlinecolor":"#2a3f5f","gridcolor":"white","linecolor":"white","minorgridcolor":"white","startlinecolor":"#2a3f5f"},"type":"carpet"}],"table":[{"cells":{"fill":{"color":"#EBF0F8"},"line":{"color":"white"}},"header":{"fill":{"color":"#C8D4E3"},"line":{"color":"white"}},"type":"table"}],"barpolar":[{"marker":{"line":{"color":"#E5ECF6","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"barpolar"}],"pie":[{"automargin":true,"type":"pie"}]},"layout":{"autotypenumbers":"strict","colorway":["#636efa","#EF553B","#00cc96","#ab63fa","#FFA15A","#19d3f3","#FF6692","#B6E880","#FF97FF","#FECB52"],"font":{"color":"#2a3f5f"},"hovermode":"closest","hoverlabel":{"align":"left"},"paper_bgcolor":"white","plot_bgcolor":"#E5ECF6","polar":{"bgcolor":"#E5ECF6","angularaxis":{"gridcolor":"white","linecolor":"white","ticks":""},"radialaxis":{"gridcolor":"white","linecolor":"white","ticks":""}},"ternary":{"bgcolor":"#E5ECF6","aaxis":{"gridcolor":"white","linecolor":"white","ticks":""},"baxis":{"gridcolor":"white","linecolor":"white","ticks":""},"caxis":{"gridcolor":"white","linecolor":"white","ticks":""}},"coloraxis":{"colorbar":{"outlinewidth":0,"ticks":""}},"colorscale":{"sequential":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"sequentialminus":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"diverging":[[0,"#8e0152"],[0.1,"#c51b7d"],[0.2,"#de77ae"],[0.3,"#f1b6da"],[0.4,"#fde0ef"],[0.5,"#f7f7f7"],[0.6,"#e6f5d0"],[0.7,"#b8e186"],[0.8,"#7fbc41"],[0.9,"#4d9221"],[1,"#276419"]]},"xaxis":{"gridcolor":"white","linecolor":"white","ticks":"","title":{"standoff":15},"zerolinecolor":"white","automargin":true,"zerolinewidth":2},"yaxis":{"gridcolor":"white","linecolor":"white","ticks":"","title":{"standoff":15},"zerolinecolor":"white","automargin":true,"zerolinewidth":2},"scene":{"xaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2},"yaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2},"zaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2}},"shapedefaults":{"line":{"color":"#2a3f5f"}},"annotationdefaults":{"arrowcolor":"#2a3f5f","arrowhead":0,"arrowwidth":1},"geo":{"bgcolor":"white","landcolor":"#E5ECF6","subunitcolor":"white","showland":true,"showlakes":true,"lakecolor":"white"},"title":{"x":0.05},"mapbox":{"style":"light"}}},"polar":{"domain":{"x":[0.0,1.0],"y":[0.0,1.0]},"angularaxis":{"direction":"clockwise","rotation":90},"radialaxis":{"visible":true,"range":[0,10]}},"legend":{"title":{"text":"Cluster_ML"},"tracegroupgap":0,"orientation":"h","y":-0.1},"title":{"text":"Muster-Profil: 2, 1, 5, 3, 4"},"margin":{"l":30,"r":30,"t":30,"b":30},"font":{"color":"#7a7a7a"},"height":400},                        {"responsive": true}                    )                };            </script>        </div></div></div><div class="splitter-handle vertical-splitter"></div><div id="MITTE_UNTEN" class="vertical-pane">
+    <div class="pane-header" id="MITTE_UNTEN_header">
+        <h3>Muster-Index & Kennzahlen (Mitte Unten)</h3>
+        <button class="toggle-button" onclick="togglePane('MITTE_UNTEN')">
+            <span id="MITTE_UNTEN_toggle_icon">[-]</span>
+        </button>
+    </div>
+    <div class="pane-content-body" id="MITTE_UNTEN_content"><h3>Statistische Mittelwerte aller Muster</h3><table border="1" class="dataframe table table-striped profiling-table">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>age</th>
+      <th>has_children</th>
+      <th>married</th>
+      <th>days_since_signup</th>
+      <th>total_trips</th>
+      <th>booking_lead_time_days</th>
+      <th>trip_duration_days</th>
+      <th>total_spend</th>
+      <th>session_duration_seconds</th>
+      <th>page_clicks</th>
+      <th>total_sessions</th>
+      <th>flight_distance_km</th>
+      <th>total_cancellations</th>
+      <th>cancellation_rate</th>
+      <th>conversion_rate</th>
+    </tr>
+    <tr>
+      <th>Cluster_ML</th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>1</th>
+      <td>44.53</td>
+      <td>0.24</td>
+      <td>0.36</td>
+      <td>991.15</td>
+      <td>5.08</td>
+      <td>9.33</td>
+      <td>4.06</td>
+      <td>3271.19</td>
+      <td>134.50</td>
+      <td>18.07</td>
+      <td>8.18</td>
+      <td>6483.82</td>
+      <td>0.00</td>
+      <td>0.00</td>
+      <td>0.62</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>51.57</td>
+      <td>0.46</td>
+      <td>0.93</td>
+      <td>987.31</td>
+      <td>2.86</td>
+      <td>9.79</td>
+      <td>4.06</td>
+      <td>3296.43</td>
+      <td>103.41</td>
+      <td>13.88</td>
+      <td>8.26</td>
+      <td>9048.13</td>
+      <td>0.00</td>
+      <td>0.00</td>
+      <td>0.35</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>32.45</td>
+      <td>0.29</td>
+      <td>0.03</td>
+      <td>989.53</td>
+      <td>2.45</td>
+      <td>12.42</td>
+      <td>4.12</td>
+      <td>3213.73</td>
+      <td>100.39</td>
+      <td>13.47</td>
+      <td>8.16</td>
+      <td>9424.02</td>
+      <td>0.00</td>
+      <td>0.00</td>
+      <td>0.30</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>43.86</td>
+      <td>0.30</td>
+      <td>0.41</td>
+      <td>994.45</td>
+      <td>4.46</td>
+      <td>22.76</td>
+      <td>4.49</td>
+      <td>3533.58</td>
+      <td>884.68</td>
+      <td>41.29</td>
+      <td>8.31</td>
+      <td>6519.87</td>
+      <td>1.03</td>
+      <td>0.25</td>
+      <td>0.54</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>38.94</td>
+      <td>0.40</td>
+      <td>0.44</td>
+      <td>991.02</td>
+      <td>3.03</td>
+      <td>181.56</td>
+      <td>11.51</td>
+      <td>7621.07</td>
+      <td>638.39</td>
+      <td>26.10</td>
+      <td>8.18</td>
+      <td>9091.78</td>
+      <td>0.82</td>
+      <td>0.29</td>
+      <td>0.37</td>
+    </tr>
+  </tbody>
+</table></div></div></div><div class="splitter-handle horizontal-splitter"></div><div id="ANALYSE_CONTAINER_3" class="resizable-pane">
+    <div class="pane-header" id="ANALYSE_CONTAINER_3_header">
+        <h3>Sekundär-Informationen (Rechts)</h3>
+        <button class="toggle-button" onclick="togglePane('ANALYSE_CONTAINER_3')">
+            <span id="ANALYSE_CONTAINER_3_toggle_icon">[-]</span>
+        </button>
+    </div>
+    <div class="pane-content-body" id="ANALYSE_CONTAINER_3_content"><h3>Musterdetails Index (Rechts)</h3><p>Der statistische Mustervergleich befindet sich jetzt in der Mitte unten.</p></div></div></div>
+</section>
+<section id="page4" class="tab-pane">
+<div id="MITTEL_BEREICH_RESIZABLE" class="resizable-split-view horizontal-split-wrapper"><div id="ANALYSE_CONTAINER_1" class="resizable-pane">
+    <div class="pane-header" id="ANALYSE_CONTAINER_1_header">
+        <h3>Muster Detail (Links)</h3>
+        <button class="toggle-button" onclick="togglePane('ANALYSE_CONTAINER_1')">
+            <span id="ANALYSE_CONTAINER_1_toggle_icon">[-]</span>
+        </button>
+    </div>
+    <div class="pane-content-body" id="ANALYSE_CONTAINER_1_content">
+<h2>Muster 5: Luxus- & High-Value-Kunde</h2>
+<h3 style="color: rgb(148, 103, 189)">Verguenstigung: 1 kostenlose Hotelübernachtung mit Flug</h3>
+<p><strong>Fokus:</strong> Belohnung der Top-Ausgaben und Steigerung des LTV.</p><hr>
+</div></div><div class="splitter-handle horizontal-splitter"></div><div id="ANALYSE_CONTAINER_2_WRAPPER" class="resizable-pane vertical-split-wrapper"><div id="MITTE_OBEN" class="vertical-pane">
+    <div class="pane-header" id="MITTE_OBEN_header">
+        <h3>Visualisierung Oben (Plot/Bild)</h3>
+        <button class="toggle-button" onclick="togglePane('MITTE_OBEN')">
+            <span id="MITTE_OBEN_toggle_icon">[-]</span>
+        </button>
+    </div>
+    <div class="pane-content-body" id="MITTE_OBEN_content"><h3>Radar Plot für Muster 5</h3><div>                        <script type="text/javascript">window.PlotlyConfig = {MathJaxConfig: 'local'};</script>
+        <script charset="utf-8" src="https://cdn.plot.ly/plotly-3.1.1.min.js" integrity="sha256-HUEFyfiTnZJxCxur99FjbKYTvKSzwDaD3/x5TqHpFu4=" crossorigin="anonymous"></script>                <div id="d159a9e3-6a08-48aa-8d59-e4002e1c8769" class="plotly-graph-div" style="height:400px; width:100%;"></div>            <script type="text/javascript">                window.PLOTLYENV=window.PLOTLYENV || {};                                if (document.getElementById("d159a9e3-6a08-48aa-8d59-e4002e1c8769")) {                    Plotly.newPlot(                        "d159a9e3-6a08-48aa-8d59-e4002e1c8769",                        [{"hovertemplate":"Cluster_ML=5\u003cbr\u003eWert (0-10)=%{r}\u003cbr\u003eMetrik=%{theta}\u003cextra\u003e\u003c\u002fextra\u003e","legendgroup":"5","line":{"color":"rgb(148, 103, 189)","dash":"solid"},"marker":{"symbol":"circle"},"mode":"lines","name":"5","r":{"dtype":"f8","bdata":"MrCqgVsvC0AYFsQzN4scQFWL88MJJhJAgHROWQ3JFEA55JBV1n0BQP\u002f\u002f\u002f\u002f\u002f\u002f\u002fyNAAAAAAAAAJEABAAAAAAAkQBe0Xe5YcBtA0Y\u002f7qQQoEkDA4D29bZv0PxwlFWt0vSFATIHNn9ieH0AAAAAAAAAkQDkWKKmHmwFAMrCqgVsvC0A="},"showlegend":true,"subplot":"polar","theta":["age","has_children","married","days_since_signup","total_trips","booking_lead_time_days","trip_duration_days","total_spend","session_duration_seconds","page_clicks","total_sessions","flight_distance_km","total_cancellations","cancellation_rate","conversion_rate","age"],"type":"scatterpolar","fill":"toself","opacity":0.6}],                        {"template":{"data":{"histogram2dcontour":[{"type":"histogram2dcontour","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"choropleth":[{"type":"choropleth","colorbar":{"outlinewidth":0,"ticks":""}}],"histogram2d":[{"type":"histogram2d","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"heatmap":[{"type":"heatmap","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"contourcarpet":[{"type":"contourcarpet","colorbar":{"outlinewidth":0,"ticks":""}}],"contour":[{"type":"contour","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"surface":[{"type":"surface","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"mesh3d":[{"type":"mesh3d","colorbar":{"outlinewidth":0,"ticks":""}}],"scatter":[{"fillpattern":{"fillmode":"overlay","size":10,"solidity":0.2},"type":"scatter"}],"parcoords":[{"type":"parcoords","line":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterpolargl":[{"type":"scatterpolargl","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"bar":[{"error_x":{"color":"#2a3f5f"},"error_y":{"color":"#2a3f5f"},"marker":{"line":{"color":"#E5ECF6","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"bar"}],"scattergeo":[{"type":"scattergeo","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterpolar":[{"type":"scatterpolar","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"histogram":[{"marker":{"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"histogram"}],"scattergl":[{"type":"scattergl","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatter3d":[{"type":"scatter3d","line":{"colorbar":{"outlinewidth":0,"ticks":""}},"marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scattermap":[{"type":"scattermap","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scattermapbox":[{"type":"scattermapbox","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterternary":[{"type":"scatterternary","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scattercarpet":[{"type":"scattercarpet","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"carpet":[{"aaxis":{"endlinecolor":"#2a3f5f","gridcolor":"white","linecolor":"white","minorgridcolor":"white","startlinecolor":"#2a3f5f"},"baxis":{"endlinecolor":"#2a3f5f","gridcolor":"white","linecolor":"white","minorgridcolor":"white","startlinecolor":"#2a3f5f"},"type":"carpet"}],"table":[{"cells":{"fill":{"color":"#EBF0F8"},"line":{"color":"white"}},"header":{"fill":{"color":"#C8D4E3"},"line":{"color":"white"}},"type":"table"}],"barpolar":[{"marker":{"line":{"color":"#E5ECF6","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"barpolar"}],"pie":[{"automargin":true,"type":"pie"}]},"layout":{"autotypenumbers":"strict","colorway":["#636efa","#EF553B","#00cc96","#ab63fa","#FFA15A","#19d3f3","#FF6692","#B6E880","#FF97FF","#FECB52"],"font":{"color":"#2a3f5f"},"hovermode":"closest","hoverlabel":{"align":"left"},"paper_bgcolor":"white","plot_bgcolor":"#E5ECF6","polar":{"bgcolor":"#E5ECF6","angularaxis":{"gridcolor":"white","linecolor":"white","ticks":""},"radialaxis":{"gridcolor":"white","linecolor":"white","ticks":""}},"ternary":{"bgcolor":"#E5ECF6","aaxis":{"gridcolor":"white","linecolor":"white","ticks":""},"baxis":{"gridcolor":"white","linecolor":"white","ticks":""},"caxis":{"gridcolor":"white","linecolor":"white","ticks":""}},"coloraxis":{"colorbar":{"outlinewidth":0,"ticks":""}},"colorscale":{"sequential":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"sequentialminus":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"diverging":[[0,"#8e0152"],[0.1,"#c51b7d"],[0.2,"#de77ae"],[0.3,"#f1b6da"],[0.4,"#fde0ef"],[0.5,"#f7f7f7"],[0.6,"#e6f5d0"],[0.7,"#b8e186"],[0.8,"#7fbc41"],[0.9,"#4d9221"],[1,"#276419"]]},"xaxis":{"gridcolor":"white","linecolor":"white","ticks":"","title":{"standoff":15},"zerolinecolor":"white","automargin":true,"zerolinewidth":2},"yaxis":{"gridcolor":"white","linecolor":"white","ticks":"","title":{"standoff":15},"zerolinecolor":"white","automargin":true,"zerolinewidth":2},"scene":{"xaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2},"yaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2},"zaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2}},"shapedefaults":{"line":{"color":"#2a3f5f"}},"annotationdefaults":{"arrowcolor":"#2a3f5f","arrowhead":0,"arrowwidth":1},"geo":{"bgcolor":"white","landcolor":"#E5ECF6","subunitcolor":"white","showland":true,"showlakes":true,"lakecolor":"white"},"title":{"x":0.05},"mapbox":{"style":"light"}}},"polar":{"domain":{"x":[0.0,1.0],"y":[0.0,1.0]},"angularaxis":{"direction":"clockwise","rotation":90},"radialaxis":{"visible":true,"range":[0,10]}},"legend":{"title":{"text":"Cluster_ML"},"tracegroupgap":0,"orientation":"h","y":-0.1},"title":{"text":"Muster-Profil: 5"},"margin":{"l":30,"r":30,"t":30,"b":30},"font":{"color":"#7a7a7a"},"height":400},                        {"responsive": true}                    )                };            </script>        </div></div></div><div class="splitter-handle vertical-splitter"></div><div id="MITTE_UNTEN" class="vertical-pane">
+    <div class="pane-header" id="MITTE_UNTEN_header">
+        <h3>Muster-Index & Kennzahlen (Mitte Unten)</h3>
+        <button class="toggle-button" onclick="togglePane('MITTE_UNTEN')">
+            <span id="MITTE_UNTEN_toggle_icon">[-]</span>
+        </button>
+    </div>
+    <div class="pane-content-body" id="MITTE_UNTEN_content"><h3>Statistische Mittelwerte aller Muster</h3><table border="1" class="dataframe table table-striped profiling-table">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>age</th>
+      <th>has_children</th>
+      <th>married</th>
+      <th>days_since_signup</th>
+      <th>total_trips</th>
+      <th>booking_lead_time_days</th>
+      <th>trip_duration_days</th>
+      <th>total_spend</th>
+      <th>session_duration_seconds</th>
+      <th>page_clicks</th>
+      <th>total_sessions</th>
+      <th>flight_distance_km</th>
+      <th>total_cancellations</th>
+      <th>cancellation_rate</th>
+      <th>conversion_rate</th>
+    </tr>
+    <tr>
+      <th>Cluster_ML</th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>1</th>
+      <td>44.53</td>
+      <td>0.24</td>
+      <td>0.36</td>
+      <td>991.15</td>
+      <td>5.08</td>
+      <td>9.33</td>
+      <td>4.06</td>
+      <td>3271.19</td>
+      <td>134.50</td>
+      <td>18.07</td>
+      <td>8.18</td>
+      <td>6483.82</td>
+      <td>0.00</td>
+      <td>0.00</td>
+      <td>0.62</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>51.57</td>
+      <td>0.46</td>
+      <td>0.93</td>
+      <td>987.31</td>
+      <td>2.86</td>
+      <td>9.79</td>
+      <td>4.06</td>
+      <td>3296.43</td>
+      <td>103.41</td>
+      <td>13.88</td>
+      <td>8.26</td>
+      <td>9048.13</td>
+      <td>0.00</td>
+      <td>0.00</td>
+      <td>0.35</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>32.45</td>
+      <td>0.29</td>
+      <td>0.03</td>
+      <td>989.53</td>
+      <td>2.45</td>
+      <td>12.42</td>
+      <td>4.12</td>
+      <td>3213.73</td>
+      <td>100.39</td>
+      <td>13.47</td>
+      <td>8.16</td>
+      <td>9424.02</td>
+      <td>0.00</td>
+      <td>0.00</td>
+      <td>0.30</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>43.86</td>
+      <td>0.30</td>
+      <td>0.41</td>
+      <td>994.45</td>
+      <td>4.46</td>
+      <td>22.76</td>
+      <td>4.49</td>
+      <td>3533.58</td>
+      <td>884.68</td>
+      <td>41.29</td>
+      <td>8.31</td>
+      <td>6519.87</td>
+      <td>1.03</td>
+      <td>0.25</td>
+      <td>0.54</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>38.94</td>
+      <td>0.40</td>
+      <td>0.44</td>
+      <td>991.02</td>
+      <td>3.03</td>
+      <td>181.56</td>
+      <td>11.51</td>
+      <td>7621.07</td>
+      <td>638.39</td>
+      <td>26.10</td>
+      <td>8.18</td>
+      <td>9091.78</td>
+      <td>0.82</td>
+      <td>0.29</td>
+      <td>0.37</td>
+    </tr>
+  </tbody>
+</table></div></div></div><div class="splitter-handle horizontal-splitter"></div><div id="ANALYSE_CONTAINER_3" class="resizable-pane">
+    <div class="pane-header" id="ANALYSE_CONTAINER_3_header">
+        <h3>Sekundär-Informationen (Rechts)</h3>
+        <button class="toggle-button" onclick="togglePane('ANALYSE_CONTAINER_3')">
+            <span id="ANALYSE_CONTAINER_3_toggle_icon">[-]</span>
+        </button>
+    </div>
+    <div class="pane-content-body" id="ANALYSE_CONTAINER_3_content">
+<h4>Muster 5: Key Metrics</h4>
+<ul>
+    <li>**Durchschn. Ausgaben:** 7,621.07 $</li>
+    <li>**Durchschn. Trips:** 3.03</li>
+    <li>**Anzahl Kunden:** 269</li>
+</ul>
+</div></div></div>
+</section>
+<section id="page5" class="tab-pane">
+<div id="MITTEL_BEREICH_RESIZABLE" class="resizable-split-view horizontal-split-wrapper"><div id="ANALYSE_CONTAINER_1" class="resizable-pane">
+    <div class="pane-header" id="ANALYSE_CONTAINER_1_header">
+        <h3>Muster Detail (Links)</h3>
+        <button class="toggle-button" onclick="togglePane('ANALYSE_CONTAINER_1')">
+            <span id="ANALYSE_CONTAINER_1_toggle_icon">[-]</span>
+        </button>
+    </div>
+    <div class="pane-content-body" id="ANALYSE_CONTAINER_1_content">
+<h2>Muster 3: Frequenz- & Effizienz-Kunde</h2>
+<h3 style="color: rgb(44, 160, 44)">Verguenstigung: Keine Stornierungsgebühren</h3>
+<p><strong>Fokus:</strong> Belohnung der höchsten Frequenz zur Steigerung der Loyalität.</p><hr>
+</div></div><div class="splitter-handle horizontal-splitter"></div><div id="ANALYSE_CONTAINER_2_WRAPPER" class="resizable-pane vertical-split-wrapper"><div id="MITTE_OBEN" class="vertical-pane">
+    <div class="pane-header" id="MITTE_OBEN_header">
+        <h3>Visualisierung Oben (Plot/Bild)</h3>
+        <button class="toggle-button" onclick="togglePane('MITTE_OBEN')">
+            <span id="MITTE_OBEN_toggle_icon">[-]</span>
+        </button>
+    </div>
+    <div class="pane-content-body" id="MITTE_OBEN_content"><h3>Radar Plot für Muster 3</h3><div>                        <script type="text/javascript">window.PlotlyConfig = {MathJaxConfig: 'local'};</script>
+        <script charset="utf-8" src="https://cdn.plot.ly/plotly-3.1.1.min.js" integrity="sha256-HUEFyfiTnZJxCxur99FjbKYTvKSzwDaD3/x5TqHpFu4=" crossorigin="anonymous"></script>                <div id="995d670a-3312-49f0-b564-96bc7c329730" class="plotly-graph-div" style="height:400px; width:100%;"></div>            <script type="text/javascript">                window.PLOTLYENV=window.PLOTLYENV || {};                                if (document.getElementById("995d670a-3312-49f0-b564-96bc7c329730")) {                    Plotly.newPlot(                        "995d670a-3312-49f0-b564-96bc7c329730",                        [{"hovertemplate":"Cluster_ML=3\u003cbr\u003eWert (0-10)=%{r}\u003cbr\u003eMetrik=%{theta}\u003cextra\u003e\u003c\u002fextra\u003e","legendgroup":"3","line":{"color":"rgb(44, 160, 44)","dash":"solid"},"marker":{"symbol":"circle"},"mode":"lines","name":"3","r":{"dtype":"f8","bdata":"AAAAAAAAAADB2OvsJskAQAAAAAAAAAAAABucN63XCEAAAAAAAAAAAJ6oAZQr7cY\u002fcDt1UrastT8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACRAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="},"showlegend":true,"subplot":"polar","theta":["age","has_children","married","days_since_signup","total_trips","booking_lead_time_days","trip_duration_days","total_spend","session_duration_seconds","page_clicks","total_sessions","flight_distance_km","total_cancellations","cancellation_rate","conversion_rate","age"],"type":"scatterpolar","fill":"toself","opacity":0.6}],                        {"template":{"data":{"histogram2dcontour":[{"type":"histogram2dcontour","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"choropleth":[{"type":"choropleth","colorbar":{"outlinewidth":0,"ticks":""}}],"histogram2d":[{"type":"histogram2d","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"heatmap":[{"type":"heatmap","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"contourcarpet":[{"type":"contourcarpet","colorbar":{"outlinewidth":0,"ticks":""}}],"contour":[{"type":"contour","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"surface":[{"type":"surface","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"mesh3d":[{"type":"mesh3d","colorbar":{"outlinewidth":0,"ticks":""}}],"scatter":[{"fillpattern":{"fillmode":"overlay","size":10,"solidity":0.2},"type":"scatter"}],"parcoords":[{"type":"parcoords","line":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterpolargl":[{"type":"scatterpolargl","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"bar":[{"error_x":{"color":"#2a3f5f"},"error_y":{"color":"#2a3f5f"},"marker":{"line":{"color":"#E5ECF6","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"bar"}],"scattergeo":[{"type":"scattergeo","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterpolar":[{"type":"scatterpolar","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"histogram":[{"marker":{"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"histogram"}],"scattergl":[{"type":"scattergl","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatter3d":[{"type":"scatter3d","line":{"colorbar":{"outlinewidth":0,"ticks":""}},"marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scattermap":[{"type":"scattermap","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scattermapbox":[{"type":"scattermapbox","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterternary":[{"type":"scatterternary","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scattercarpet":[{"type":"scattercarpet","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"carpet":[{"aaxis":{"endlinecolor":"#2a3f5f","gridcolor":"white","linecolor":"white","minorgridcolor":"white","startlinecolor":"#2a3f5f"},"baxis":{"endlinecolor":"#2a3f5f","gridcolor":"white","linecolor":"white","minorgridcolor":"white","startlinecolor":"#2a3f5f"},"type":"carpet"}],"table":[{"cells":{"fill":{"color":"#EBF0F8"},"line":{"color":"white"}},"header":{"fill":{"color":"#C8D4E3"},"line":{"color":"white"}},"type":"table"}],"barpolar":[{"marker":{"line":{"color":"#E5ECF6","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"barpolar"}],"pie":[{"automargin":true,"type":"pie"}]},"layout":{"autotypenumbers":"strict","colorway":["#636efa","#EF553B","#00cc96","#ab63fa","#FFA15A","#19d3f3","#FF6692","#B6E880","#FF97FF","#FECB52"],"font":{"color":"#2a3f5f"},"hovermode":"closest","hoverlabel":{"align":"left"},"paper_bgcolor":"white","plot_bgcolor":"#E5ECF6","polar":{"bgcolor":"#E5ECF6","angularaxis":{"gridcolor":"white","linecolor":"white","ticks":""},"radialaxis":{"gridcolor":"white","linecolor":"white","ticks":""}},"ternary":{"bgcolor":"#E5ECF6","aaxis":{"gridcolor":"white","linecolor":"white","ticks":""},"baxis":{"gridcolor":"white","linecolor":"white","ticks":""},"caxis":{"gridcolor":"white","linecolor":"white","ticks":""}},"coloraxis":{"colorbar":{"outlinewidth":0,"ticks":""}},"colorscale":{"sequential":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"sequentialminus":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"diverging":[[0,"#8e0152"],[0.1,"#c51b7d"],[0.2,"#de77ae"],[0.3,"#f1b6da"],[0.4,"#fde0ef"],[0.5,"#f7f7f7"],[0.6,"#e6f5d0"],[0.7,"#b8e186"],[0.8,"#7fbc41"],[0.9,"#4d9221"],[1,"#276419"]]},"xaxis":{"gridcolor":"white","linecolor":"white","ticks":"","title":{"standoff":15},"zerolinecolor":"white","automargin":true,"zerolinewidth":2},"yaxis":{"gridcolor":"white","linecolor":"white","ticks":"","title":{"standoff":15},"zerolinecolor":"white","automargin":true,"zerolinewidth":2},"scene":{"xaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2},"yaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2},"zaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2}},"shapedefaults":{"line":{"color":"#2a3f5f"}},"annotationdefaults":{"arrowcolor":"#2a3f5f","arrowhead":0,"arrowwidth":1},"geo":{"bgcolor":"white","landcolor":"#E5ECF6","subunitcolor":"white","showland":true,"showlakes":true,"lakecolor":"white"},"title":{"x":0.05},"mapbox":{"style":"light"}}},"polar":{"domain":{"x":[0.0,1.0],"y":[0.0,1.0]},"angularaxis":{"direction":"clockwise","rotation":90},"radialaxis":{"visible":true,"range":[0,10]}},"legend":{"title":{"text":"Cluster_ML"},"tracegroupgap":0,"orientation":"h","y":-0.1},"title":{"text":"Muster-Profil: 3"},"margin":{"l":30,"r":30,"t":30,"b":30},"font":{"color":"#7a7a7a"},"height":400},                        {"responsive": true}                    )                };            </script>        </div></div></div><div class="splitter-handle vertical-splitter"></div><div id="MITTE_UNTEN" class="vertical-pane">
+    <div class="pane-header" id="MITTE_UNTEN_header">
+        <h3>Muster-Index & Kennzahlen (Mitte Unten)</h3>
+        <button class="toggle-button" onclick="togglePane('MITTE_UNTEN')">
+            <span id="MITTE_UNTEN_toggle_icon">[-]</span>
+        </button>
+    </div>
+    <div class="pane-content-body" id="MITTE_UNTEN_content"><h3>Statistische Mittelwerte aller Muster</h3><table border="1" class="dataframe table table-striped profiling-table">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>age</th>
+      <th>has_children</th>
+      <th>married</th>
+      <th>days_since_signup</th>
+      <th>total_trips</th>
+      <th>booking_lead_time_days</th>
+      <th>trip_duration_days</th>
+      <th>total_spend</th>
+      <th>session_duration_seconds</th>
+      <th>page_clicks</th>
+      <th>total_sessions</th>
+      <th>flight_distance_km</th>
+      <th>total_cancellations</th>
+      <th>cancellation_rate</th>
+      <th>conversion_rate</th>
+    </tr>
+    <tr>
+      <th>Cluster_ML</th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>1</th>
+      <td>44.53</td>
+      <td>0.24</td>
+      <td>0.36</td>
+      <td>991.15</td>
+      <td>5.08</td>
+      <td>9.33</td>
+      <td>4.06</td>
+      <td>3271.19</td>
+      <td>134.50</td>
+      <td>18.07</td>
+      <td>8.18</td>
+      <td>6483.82</td>
+      <td>0.00</td>
+      <td>0.00</td>
+      <td>0.62</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>51.57</td>
+      <td>0.46</td>
+      <td>0.93</td>
+      <td>987.31</td>
+      <td>2.86</td>
+      <td>9.79</td>
+      <td>4.06</td>
+      <td>3296.43</td>
+      <td>103.41</td>
+      <td>13.88</td>
+      <td>8.26</td>
+      <td>9048.13</td>
+      <td>0.00</td>
+      <td>0.00</td>
+      <td>0.35</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>32.45</td>
+      <td>0.29</td>
+      <td>0.03</td>
+      <td>989.53</td>
+      <td>2.45</td>
+      <td>12.42</td>
+      <td>4.12</td>
+      <td>3213.73</td>
+      <td>100.39</td>
+      <td>13.47</td>
+      <td>8.16</td>
+      <td>9424.02</td>
+      <td>0.00</td>
+      <td>0.00</td>
+      <td>0.30</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>43.86</td>
+      <td>0.30</td>
+      <td>0.41</td>
+      <td>994.45</td>
+      <td>4.46</td>
+      <td>22.76</td>
+      <td>4.49</td>
+      <td>3533.58</td>
+      <td>884.68</td>
+      <td>41.29</td>
+      <td>8.31</td>
+      <td>6519.87</td>
+      <td>1.03</td>
+      <td>0.25</td>
+      <td>0.54</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>38.94</td>
+      <td>0.40</td>
+      <td>0.44</td>
+      <td>991.02</td>
+      <td>3.03</td>
+      <td>181.56</td>
+      <td>11.51</td>
+      <td>7621.07</td>
+      <td>638.39</td>
+      <td>26.10</td>
+      <td>8.18</td>
+      <td>9091.78</td>
+      <td>0.82</td>
+      <td>0.29</td>
+      <td>0.37</td>
+    </tr>
+  </tbody>
+</table></div></div></div><div class="splitter-handle horizontal-splitter"></div><div id="ANALYSE_CONTAINER_3" class="resizable-pane">
+    <div class="pane-header" id="ANALYSE_CONTAINER_3_header">
+        <h3>Sekundär-Informationen (Rechts)</h3>
+        <button class="toggle-button" onclick="togglePane('ANALYSE_CONTAINER_3')">
+            <span id="ANALYSE_CONTAINER_3_toggle_icon">[-]</span>
+        </button>
+    </div>
+    <div class="pane-content-body" id="ANALYSE_CONTAINER_3_content">
+<h4>Muster 3: Key Metrics</h4>
+<ul>
+    <li>**Durchschn. Ausgaben:** 3,213.73 $</li>
+    <li>**Durchschn. Trips:** 2.45</li>
+    <li>**Anzahl Kunden:** 1510</li>
+</ul>
+</div></div></div>
+</section>
+<section id="page6" class="tab-pane">
+<div id="MITTEL_BEREICH_RESIZABLE" class="resizable-split-view horizontal-split-wrapper"><div id="ANALYSE_CONTAINER_1" class="resizable-pane">
+    <div class="pane-header" id="ANALYSE_CONTAINER_1_header">
+        <h3>Muster Detail (Links)</h3>
+        <button class="toggle-button" onclick="togglePane('ANALYSE_CONTAINER_1')">
+            <span id="ANALYSE_CONTAINER_1_toggle_icon">[-]</span>
+        </button>
+    </div>
+    <div class="pane-content-body" id="ANALYSE_CONTAINER_1_content">
+<h2>Muster 2: Der Loyale Familienbesucher</h2>
+<h3 style="color: rgb(255, 127, 14)">Verguenstigung: Kostenloses aufgegebenes Gepäckstück</h3>
+<p><strong>Fokus:</strong> Stärkung der Markenbindung durch Komfort für Familienreisen.</p><hr>
+</div></div><div class="splitter-handle horizontal-splitter"></div><div id="ANALYSE_CONTAINER_2_WRAPPER" class="resizable-pane vertical-split-wrapper"><div id="MITTE_OBEN" class="vertical-pane">
+    <div class="pane-header" id="MITTE_OBEN_header">
+        <h3>Visualisierung Oben (Plot/Bild)</h3>
+        <button class="toggle-button" onclick="togglePane('MITTE_OBEN')">
+            <span id="MITTE_OBEN_toggle_icon">[-]</span>
+        </button>
+    </div>
+    <div class="pane-content-body" id="MITTE_OBEN_content"><h3>Radar Plot für Muster 2</h3><div>                        <script type="text/javascript">window.PlotlyConfig = {MathJaxConfig: 'local'};</script>
+        <script charset="utf-8" src="https://cdn.plot.ly/plotly-3.1.1.min.js" integrity="sha256-HUEFyfiTnZJxCxur99FjbKYTvKSzwDaD3/x5TqHpFu4=" crossorigin="anonymous"></script>                <div id="9ab35669-6c12-4102-ae31-ce8335ab1b31" class="plotly-graph-div" style="height:400px; width:100%;"></div>            <script type="text/javascript">                window.PLOTLYENV=window.PLOTLYENV || {};                                if (document.getElementById("9ab35669-6c12-4102-ae31-ce8335ab1b31")) {                    Plotly.newPlot(                        "9ab35669-6c12-4102-ae31-ce8335ab1b31",                        [{"hovertemplate":"Cluster_ML=2\u003cbr\u003eWert (0-10)=%{r}\u003cbr\u003eMetrik=%{theta}\u003cextra\u003e\u003c\u002fextra\u003e","legendgroup":"2","line":{"color":"rgb(255, 127, 14)","dash":"solid"},"marker":{"symbol":"circle"},"mode":"lines","name":"2","r":{"dtype":"f8","bdata":"AAAAAAAAJEABAAAAAAAkQP\u002f\u002f\u002f\u002f\u002f\u002f\u002fyNAAAAAAAAAAAAuo+8QBOT4P8A2B8zIFZs\u002fAAAAAAAAAADgS0sYxwTIP5CxkFLEsqM\u002f4F6rqUfVwj+g+szBuhoaQJqkDydxcSFAAAAAAAAAAAAAAAAAAAAAAFAagwUqHPc\u002fAAAAAAAAJEA="},"showlegend":true,"subplot":"polar","theta":["age","has_children","married","days_since_signup","total_trips","booking_lead_time_days","trip_duration_days","total_spend","session_duration_seconds","page_clicks","total_sessions","flight_distance_km","total_cancellations","cancellation_rate","conversion_rate","age"],"type":"scatterpolar","fill":"toself","opacity":0.6}],                        {"template":{"data":{"histogram2dcontour":[{"type":"histogram2dcontour","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"choropleth":[{"type":"choropleth","colorbar":{"outlinewidth":0,"ticks":""}}],"histogram2d":[{"type":"histogram2d","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"heatmap":[{"type":"heatmap","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"contourcarpet":[{"type":"contourcarpet","colorbar":{"outlinewidth":0,"ticks":""}}],"contour":[{"type":"contour","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"surface":[{"type":"surface","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"mesh3d":[{"type":"mesh3d","colorbar":{"outlinewidth":0,"ticks":""}}],"scatter":[{"fillpattern":{"fillmode":"overlay","size":10,"solidity":0.2},"type":"scatter"}],"parcoords":[{"type":"parcoords","line":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterpolargl":[{"type":"scatterpolargl","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"bar":[{"error_x":{"color":"#2a3f5f"},"error_y":{"color":"#2a3f5f"},"marker":{"line":{"color":"#E5ECF6","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"bar"}],"scattergeo":[{"type":"scattergeo","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterpolar":[{"type":"scatterpolar","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"histogram":[{"marker":{"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"histogram"}],"scattergl":[{"type":"scattergl","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatter3d":[{"type":"scatter3d","line":{"colorbar":{"outlinewidth":0,"ticks":""}},"marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scattermap":[{"type":"scattermap","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scattermapbox":[{"type":"scattermapbox","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterternary":[{"type":"scatterternary","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scattercarpet":[{"type":"scattercarpet","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"carpet":[{"aaxis":{"endlinecolor":"#2a3f5f","gridcolor":"white","linecolor":"white","minorgridcolor":"white","startlinecolor":"#2a3f5f"},"baxis":{"endlinecolor":"#2a3f5f","gridcolor":"white","linecolor":"white","minorgridcolor":"white","startlinecolor":"#2a3f5f"},"type":"carpet"}],"table":[{"cells":{"fill":{"color":"#EBF0F8"},"line":{"color":"white"}},"header":{"fill":{"color":"#C8D4E3"},"line":{"color":"white"}},"type":"table"}],"barpolar":[{"marker":{"line":{"color":"#E5ECF6","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"barpolar"}],"pie":[{"automargin":true,"type":"pie"}]},"layout":{"autotypenumbers":"strict","colorway":["#636efa","#EF553B","#00cc96","#ab63fa","#FFA15A","#19d3f3","#FF6692","#B6E880","#FF97FF","#FECB52"],"font":{"color":"#2a3f5f"},"hovermode":"closest","hoverlabel":{"align":"left"},"paper_bgcolor":"white","plot_bgcolor":"#E5ECF6","polar":{"bgcolor":"#E5ECF6","angularaxis":{"gridcolor":"white","linecolor":"white","ticks":""},"radialaxis":{"gridcolor":"white","linecolor":"white","ticks":""}},"ternary":{"bgcolor":"#E5ECF6","aaxis":{"gridcolor":"white","linecolor":"white","ticks":""},"baxis":{"gridcolor":"white","linecolor":"white","ticks":""},"caxis":{"gridcolor":"white","linecolor":"white","ticks":""}},"coloraxis":{"colorbar":{"outlinewidth":0,"ticks":""}},"colorscale":{"sequential":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"sequentialminus":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"diverging":[[0,"#8e0152"],[0.1,"#c51b7d"],[0.2,"#de77ae"],[0.3,"#f1b6da"],[0.4,"#fde0ef"],[0.5,"#f7f7f7"],[0.6,"#e6f5d0"],[0.7,"#b8e186"],[0.8,"#7fbc41"],[0.9,"#4d9221"],[1,"#276419"]]},"xaxis":{"gridcolor":"white","linecolor":"white","ticks":"","title":{"standoff":15},"zerolinecolor":"white","automargin":true,"zerolinewidth":2},"yaxis":{"gridcolor":"white","linecolor":"white","ticks":"","title":{"standoff":15},"zerolinecolor":"white","automargin":true,"zerolinewidth":2},"scene":{"xaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2},"yaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2},"zaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2}},"shapedefaults":{"line":{"color":"#2a3f5f"}},"annotationdefaults":{"arrowcolor":"#2a3f5f","arrowhead":0,"arrowwidth":1},"geo":{"bgcolor":"white","landcolor":"#E5ECF6","subunitcolor":"white","showland":true,"showlakes":true,"lakecolor":"white"},"title":{"x":0.05},"mapbox":{"style":"light"}}},"polar":{"domain":{"x":[0.0,1.0],"y":[0.0,1.0]},"angularaxis":{"direction":"clockwise","rotation":90},"radialaxis":{"visible":true,"range":[0,10]}},"legend":{"title":{"text":"Cluster_ML"},"tracegroupgap":0,"orientation":"h","y":-0.1},"title":{"text":"Muster-Profil: 2"},"margin":{"l":30,"r":30,"t":30,"b":30},"font":{"color":"#7a7a7a"},"height":400},                        {"responsive": true}                    )                };            </script>        </div></div></div><div class="splitter-handle vertical-splitter"></div><div id="MITTE_UNTEN" class="vertical-pane">
+    <div class="pane-header" id="MITTE_UNTEN_header">
+        <h3>Muster-Index & Kennzahlen (Mitte Unten)</h3>
+        <button class="toggle-button" onclick="togglePane('MITTE_UNTEN')">
+            <span id="MITTE_UNTEN_toggle_icon">[-]</span>
+        </button>
+    </div>
+    <div class="pane-content-body" id="MITTE_UNTEN_content"><h3>Statistische Mittelwerte aller Muster</h3><table border="1" class="dataframe table table-striped profiling-table">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>age</th>
+      <th>has_children</th>
+      <th>married</th>
+      <th>days_since_signup</th>
+      <th>total_trips</th>
+      <th>booking_lead_time_days</th>
+      <th>trip_duration_days</th>
+      <th>total_spend</th>
+      <th>session_duration_seconds</th>
+      <th>page_clicks</th>
+      <th>total_sessions</th>
+      <th>flight_distance_km</th>
+      <th>total_cancellations</th>
+      <th>cancellation_rate</th>
+      <th>conversion_rate</th>
+    </tr>
+    <tr>
+      <th>Cluster_ML</th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>1</th>
+      <td>44.53</td>
+      <td>0.24</td>
+      <td>0.36</td>
+      <td>991.15</td>
+      <td>5.08</td>
+      <td>9.33</td>
+      <td>4.06</td>
+      <td>3271.19</td>
+      <td>134.50</td>
+      <td>18.07</td>
+      <td>8.18</td>
+      <td>6483.82</td>
+      <td>0.00</td>
+      <td>0.00</td>
+      <td>0.62</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>51.57</td>
+      <td>0.46</td>
+      <td>0.93</td>
+      <td>987.31</td>
+      <td>2.86</td>
+      <td>9.79</td>
+      <td>4.06</td>
+      <td>3296.43</td>
+      <td>103.41</td>
+      <td>13.88</td>
+      <td>8.26</td>
+      <td>9048.13</td>
+      <td>0.00</td>
+      <td>0.00</td>
+      <td>0.35</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>32.45</td>
+      <td>0.29</td>
+      <td>0.03</td>
+      <td>989.53</td>
+      <td>2.45</td>
+      <td>12.42</td>
+      <td>4.12</td>
+      <td>3213.73</td>
+      <td>100.39</td>
+      <td>13.47</td>
+      <td>8.16</td>
+      <td>9424.02</td>
+      <td>0.00</td>
+      <td>0.00</td>
+      <td>0.30</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>43.86</td>
+      <td>0.30</td>
+      <td>0.41</td>
+      <td>994.45</td>
+      <td>4.46</td>
+      <td>22.76</td>
+      <td>4.49</td>
+      <td>3533.58</td>
+      <td>884.68</td>
+      <td>41.29</td>
+      <td>8.31</td>
+      <td>6519.87</td>
+      <td>1.03</td>
+      <td>0.25</td>
+      <td>0.54</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>38.94</td>
+      <td>0.40</td>
+      <td>0.44</td>
+      <td>991.02</td>
+      <td>3.03</td>
+      <td>181.56</td>
+      <td>11.51</td>
+      <td>7621.07</td>
+      <td>638.39</td>
+      <td>26.10</td>
+      <td>8.18</td>
+      <td>9091.78</td>
+      <td>0.82</td>
+      <td>0.29</td>
+      <td>0.37</td>
+    </tr>
+  </tbody>
+</table></div></div></div><div class="splitter-handle horizontal-splitter"></div><div id="ANALYSE_CONTAINER_3" class="resizable-pane">
+    <div class="pane-header" id="ANALYSE_CONTAINER_3_header">
+        <h3>Sekundär-Informationen (Rechts)</h3>
+        <button class="toggle-button" onclick="togglePane('ANALYSE_CONTAINER_3')">
+            <span id="ANALYSE_CONTAINER_3_toggle_icon">[-]</span>
+        </button>
+    </div>
+    <div class="pane-content-body" id="ANALYSE_CONTAINER_3_content">
+<h4>Muster 2: Key Metrics</h4>
+<ul>
+    <li>**Durchschn. Ausgaben:** 3,296.43 $</li>
+    <li>**Durchschn. Trips:** 2.86</li>
+    <li>**Anzahl Kunden:** 1635</li>
+</ul>
+</div></div></div>
+</section>
+<section id="page7" class="tab-pane">
+<div id="MITTEL_BEREICH_RESIZABLE" class="resizable-split-view horizontal-split-wrapper"><div id="ANALYSE_CONTAINER_1" class="resizable-pane">
+    <div class="pane-header" id="ANALYSE_CONTAINER_1_header">
+        <h3>Muster Detail (Links)</h3>
+        <button class="toggle-button" onclick="togglePane('ANALYSE_CONTAINER_1')">
+            <span id="ANALYSE_CONTAINER_1_toggle_icon">[-]</span>
+        </button>
+    </div>
+    <div class="pane-content-body" id="ANALYSE_CONTAINER_1_content">
+<h2>Muster 1 & 4: Wachstumskunden (Recherchierer & Rabatt-Suchende)</h2>
+<h3 style="color: rgb(31, 119, 180)">Verguenstigung: Kostenloses Hotelessen & Exklusive Rabatte</h3>
+<p><strong>Fokus:</strong> Anreiz zur Steigerung der Frequenz bei Wachstumskunden.</p><hr>
+</div></div><div class="splitter-handle horizontal-splitter"></div><div id="ANALYSE_CONTAINER_2_WRAPPER" class="resizable-pane vertical-split-wrapper"><div id="MITTE_OBEN" class="vertical-pane">
+    <div class="pane-header" id="MITTE_OBEN_header">
+        <h3>Visualisierung Oben (Plot/Bild)</h3>
+        <button class="toggle-button" onclick="togglePane('MITTE_OBEN')">
+            <span id="MITTE_OBEN_toggle_icon">[-]</span>
+        </button>
+    </div>
+    <div class="pane-content-body" id="MITTE_OBEN_content"><h3>Radar Plot für Muster 1, 4</h3><div>                        <script type="text/javascript">window.PlotlyConfig = {MathJaxConfig: 'local'};</script>
+        <script charset="utf-8" src="https://cdn.plot.ly/plotly-3.1.1.min.js" integrity="sha256-HUEFyfiTnZJxCxur99FjbKYTvKSzwDaD3/x5TqHpFu4=" crossorigin="anonymous"></script>                <div id="b8445148-db86-4873-9c8d-2b05d962abe5" class="plotly-graph-div" style="height:400px; width:100%;"></div>            <script type="text/javascript">                window.PLOTLYENV=window.PLOTLYENV || {};                                if (document.getElementById("b8445148-db86-4873-9c8d-2b05d962abe5")) {                    Plotly.newPlot(                        "b8445148-db86-4873-9c8d-2b05d962abe5",                        [{"hovertemplate":"Cluster_ML=1\u003cbr\u003eWert (0-10)=%{r}\u003cbr\u003eMetrik=%{theta}\u003cextra\u003e\u003c\u002fextra\u003e","legendgroup":"1","line":{"color":"rgb(31, 119, 180)","dash":"solid"},"marker":{"symbol":"circle"},"mode":"lines","name":"1","r":{"dtype":"f8","bdata":"\u002fQYYqrtGGUAAAAAAAAAAANc2QUMrrA1AwKOWoSaCFUAAAAAAAAAkQAAAAAAAAAAAAPCquraISj843blwaLDAP0O2zF751Ns\u002fyh9+nuh1+j9AZWq9f476PwAAAAAAAAAAPfjdb0fucT+FvfxkpwllPwAAAAAAACRA\u002fQYYqrtGGUA="},"showlegend":true,"subplot":"polar","theta":["age","has_children","married","days_since_signup","total_trips","booking_lead_time_days","trip_duration_days","total_spend","session_duration_seconds","page_clicks","total_sessions","flight_distance_km","total_cancellations","cancellation_rate","conversion_rate","age"],"type":"scatterpolar","fill":"toself","opacity":0.6},{"hovertemplate":"Cluster_ML=4\u003cbr\u003eWert (0-10)=%{r}\u003cbr\u003eMetrik=%{theta}\u003cextra\u003e\u003c\u002fextra\u003e","legendgroup":"4","line":{"color":"rgb(214, 39, 40)","dash":"solid"},"marker":{"symbol":"circle"},"mode":"lines","name":"4","r":{"dtype":"f8","bdata":"L51dNyTgF0AQ7ZGjhIgFQHCu1wUIvxBAAAAAAAAAJEBWFQCzjZIeQHT2Zey78ug\u002f+HUDun674j9otRrtPjnnPwAAAAAAACRA\u002f\u002f\u002f\u002f\u002f\u002f\u002f\u002fI0AAAAAAAAAkQAD0jjHcY78\u002fAAAAAAAAJEBt7JhMRDghQJRtKFechh1AL51dNyTgF0A="},"showlegend":true,"subplot":"polar","theta":["age","has_children","married","days_since_signup","total_trips","booking_lead_time_days","trip_duration_days","total_spend","session_duration_seconds","page_clicks","total_sessions","flight_distance_km","total_cancellations","cancellation_rate","conversion_rate","age"],"type":"scatterpolar","fill":"toself","opacity":0.6}],                        {"template":{"data":{"histogram2dcontour":[{"type":"histogram2dcontour","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"choropleth":[{"type":"choropleth","colorbar":{"outlinewidth":0,"ticks":""}}],"histogram2d":[{"type":"histogram2d","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"heatmap":[{"type":"heatmap","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"contourcarpet":[{"type":"contourcarpet","colorbar":{"outlinewidth":0,"ticks":""}}],"contour":[{"type":"contour","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"surface":[{"type":"surface","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"mesh3d":[{"type":"mesh3d","colorbar":{"outlinewidth":0,"ticks":""}}],"scatter":[{"fillpattern":{"fillmode":"overlay","size":10,"solidity":0.2},"type":"scatter"}],"parcoords":[{"type":"parcoords","line":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterpolargl":[{"type":"scatterpolargl","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"bar":[{"error_x":{"color":"#2a3f5f"},"error_y":{"color":"#2a3f5f"},"marker":{"line":{"color":"#E5ECF6","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"bar"}],"scattergeo":[{"type":"scattergeo","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterpolar":[{"type":"scatterpolar","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"histogram":[{"marker":{"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"histogram"}],"scattergl":[{"type":"scattergl","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatter3d":[{"type":"scatter3d","line":{"colorbar":{"outlinewidth":0,"ticks":""}},"marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scattermap":[{"type":"scattermap","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scattermapbox":[{"type":"scattermapbox","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterternary":[{"type":"scatterternary","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scattercarpet":[{"type":"scattercarpet","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"carpet":[{"aaxis":{"endlinecolor":"#2a3f5f","gridcolor":"white","linecolor":"white","minorgridcolor":"white","startlinecolor":"#2a3f5f"},"baxis":{"endlinecolor":"#2a3f5f","gridcolor":"white","linecolor":"white","minorgridcolor":"white","startlinecolor":"#2a3f5f"},"type":"carpet"}],"table":[{"cells":{"fill":{"color":"#EBF0F8"},"line":{"color":"white"}},"header":{"fill":{"color":"#C8D4E3"},"line":{"color":"white"}},"type":"table"}],"barpolar":[{"marker":{"line":{"color":"#E5ECF6","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"barpolar"}],"pie":[{"automargin":true,"type":"pie"}]},"layout":{"autotypenumbers":"strict","colorway":["#636efa","#EF553B","#00cc96","#ab63fa","#FFA15A","#19d3f3","#FF6692","#B6E880","#FF97FF","#FECB52"],"font":{"color":"#2a3f5f"},"hovermode":"closest","hoverlabel":{"align":"left"},"paper_bgcolor":"white","plot_bgcolor":"#E5ECF6","polar":{"bgcolor":"#E5ECF6","angularaxis":{"gridcolor":"white","linecolor":"white","ticks":""},"radialaxis":{"gridcolor":"white","linecolor":"white","ticks":""}},"ternary":{"bgcolor":"#E5ECF6","aaxis":{"gridcolor":"white","linecolor":"white","ticks":""},"baxis":{"gridcolor":"white","linecolor":"white","ticks":""},"caxis":{"gridcolor":"white","linecolor":"white","ticks":""}},"coloraxis":{"colorbar":{"outlinewidth":0,"ticks":""}},"colorscale":{"sequential":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"sequentialminus":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"diverging":[[0,"#8e0152"],[0.1,"#c51b7d"],[0.2,"#de77ae"],[0.3,"#f1b6da"],[0.4,"#fde0ef"],[0.5,"#f7f7f7"],[0.6,"#e6f5d0"],[0.7,"#b8e186"],[0.8,"#7fbc41"],[0.9,"#4d9221"],[1,"#276419"]]},"xaxis":{"gridcolor":"white","linecolor":"white","ticks":"","title":{"standoff":15},"zerolinecolor":"white","automargin":true,"zerolinewidth":2},"yaxis":{"gridcolor":"white","linecolor":"white","ticks":"","title":{"standoff":15},"zerolinecolor":"white","automargin":true,"zerolinewidth":2},"scene":{"xaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2},"yaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2},"zaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2}},"shapedefaults":{"line":{"color":"#2a3f5f"}},"annotationdefaults":{"arrowcolor":"#2a3f5f","arrowhead":0,"arrowwidth":1},"geo":{"bgcolor":"white","landcolor":"#E5ECF6","subunitcolor":"white","showland":true,"showlakes":true,"lakecolor":"white"},"title":{"x":0.05},"mapbox":{"style":"light"}}},"polar":{"domain":{"x":[0.0,1.0],"y":[0.0,1.0]},"angularaxis":{"direction":"clockwise","rotation":90},"radialaxis":{"visible":true,"range":[0,10]}},"legend":{"title":{"text":"Cluster_ML"},"tracegroupgap":0,"orientation":"h","y":-0.1},"title":{"text":"Muster-Profil: 1, 4"},"margin":{"l":30,"r":30,"t":30,"b":30},"font":{"color":"#7a7a7a"},"height":400},                        {"responsive": true}                    )                };            </script>        </div></div></div><div class="splitter-handle vertical-splitter"></div><div id="MITTE_UNTEN" class="vertical-pane">
+    <div class="pane-header" id="MITTE_UNTEN_header">
+        <h3>Muster-Index & Kennzahlen (Mitte Unten)</h3>
+        <button class="toggle-button" onclick="togglePane('MITTE_UNTEN')">
+            <span id="MITTE_UNTEN_toggle_icon">[-]</span>
+        </button>
+    </div>
+    <div class="pane-content-body" id="MITTE_UNTEN_content"><h3>Statistische Mittelwerte aller Muster</h3><table border="1" class="dataframe table table-striped profiling-table">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>age</th>
+      <th>has_children</th>
+      <th>married</th>
+      <th>days_since_signup</th>
+      <th>total_trips</th>
+      <th>booking_lead_time_days</th>
+      <th>trip_duration_days</th>
+      <th>total_spend</th>
+      <th>session_duration_seconds</th>
+      <th>page_clicks</th>
+      <th>total_sessions</th>
+      <th>flight_distance_km</th>
+      <th>total_cancellations</th>
+      <th>cancellation_rate</th>
+      <th>conversion_rate</th>
+    </tr>
+    <tr>
+      <th>Cluster_ML</th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>1</th>
+      <td>44.53</td>
+      <td>0.24</td>
+      <td>0.36</td>
+      <td>991.15</td>
+      <td>5.08</td>
+      <td>9.33</td>
+      <td>4.06</td>
+      <td>3271.19</td>
+      <td>134.50</td>
+      <td>18.07</td>
+      <td>8.18</td>
+      <td>6483.82</td>
+      <td>0.00</td>
+      <td>0.00</td>
+      <td>0.62</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>51.57</td>
+      <td>0.46</td>
+      <td>0.93</td>
+      <td>987.31</td>
+      <td>2.86</td>
+      <td>9.79</td>
+      <td>4.06</td>
+      <td>3296.43</td>
+      <td>103.41</td>
+      <td>13.88</td>
+      <td>8.26</td>
+      <td>9048.13</td>
+      <td>0.00</td>
+      <td>0.00</td>
+      <td>0.35</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>32.45</td>
+      <td>0.29</td>
+      <td>0.03</td>
+      <td>989.53</td>
+      <td>2.45</td>
+      <td>12.42</td>
+      <td>4.12</td>
+      <td>3213.73</td>
+      <td>100.39</td>
+      <td>13.47</td>
+      <td>8.16</td>
+      <td>9424.02</td>
+      <td>0.00</td>
+      <td>0.00</td>
+      <td>0.30</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>43.86</td>
+      <td>0.30</td>
+      <td>0.41</td>
+      <td>994.45</td>
+      <td>4.46</td>
+      <td>22.76</td>
+      <td>4.49</td>
+      <td>3533.58</td>
+      <td>884.68</td>
+      <td>41.29</td>
+      <td>8.31</td>
+      <td>6519.87</td>
+      <td>1.03</td>
+      <td>0.25</td>
+      <td>0.54</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>38.94</td>
+      <td>0.40</td>
+      <td>0.44</td>
+      <td>991.02</td>
+      <td>3.03</td>
+      <td>181.56</td>
+      <td>11.51</td>
+      <td>7621.07</td>
+      <td>638.39</td>
+      <td>26.10</td>
+      <td>8.18</td>
+      <td>9091.78</td>
+      <td>0.82</td>
+      <td>0.29</td>
+      <td>0.37</td>
+    </tr>
+  </tbody>
+</table></div></div></div><div class="splitter-handle horizontal-splitter"></div><div id="ANALYSE_CONTAINER_3" class="resizable-pane">
+    <div class="pane-header" id="ANALYSE_CONTAINER_3_header">
+        <h3>Sekundär-Informationen (Rechts)</h3>
+        <button class="toggle-button" onclick="togglePane('ANALYSE_CONTAINER_3')">
+            <span id="ANALYSE_CONTAINER_3_toggle_icon">[-]</span>
+        </button>
+    </div>
+    <div class="pane-content-body" id="ANALYSE_CONTAINER_3_content">
+<h4>Muster 1, 4: Key Metrics</h4>
+<ul>
+    <li>**Durchschn. Ausgaben:** 3,309.37 $</li>
+    <li>**Durchschn. Trips:** 4.99</li>
+    <li>**Anzahl Kunden:** 2584</li>
+</ul>
+</div></div></div>
+</section>
+<section id="page8" class="tab-pane">
+<div id="MITTEL_BEREICH_RESIZABLE" class="resizable-split-view horizontal-split-wrapper"><div id="ANALYSE_CONTAINER_1" class="resizable-pane">
+    <div class="pane-header" id="ANALYSE_CONTAINER_1_header">
+        <h3>Muster Detail (Links)</h3>
+        <button class="toggle-button" onclick="togglePane('ANALYSE_CONTAINER_1')">
+            <span id="ANALYSE_CONTAINER_1_toggle_icon">[-]</span>
+        </button>
+    </div>
+    <div class="pane-content-body" id="ANALYSE_CONTAINER_1_content"><h2>Strategische Zuweisung</h2><p>Die finale Zuweisung der Perks muss mit der erwarteten Umsatzsteigerung abgeglichen werden.</p><hr></div></div><div class="splitter-handle horizontal-splitter"></div><div id="ANALYSE_CONTAINER_2_WRAPPER" class="resizable-pane vertical-split-wrapper"><div id="MITTE_OBEN" class="vertical-pane">
+    <div class="pane-header" id="MITTE_OBEN_header">
+        <h3>Visualisierung Oben (Plot/Bild)</h3>
+        <button class="toggle-button" onclick="togglePane('MITTE_OBEN')">
+            <span id="MITTE_OBEN_toggle_icon">[-]</span>
+        </button>
+    </div>
+    <div class="pane-content-body" id="MITTE_OBEN_content"><h3>Kunden- & Perk-Verteilung</h3><img src="_Storyteling Purks/ML_plot Kunden verteilung.png" alt="Kunden- & Perk-Verteilung" style="max-width: 100%; height: auto;"></div></div><div class="splitter-handle vertical-splitter"></div><div id="MITTE_UNTEN" class="vertical-pane">
+    <div class="pane-header" id="MITTE_UNTEN_header">
+        <h3>Muster-Index & Kennzahlen (Mitte Unten)</h3>
+        <button class="toggle-button" onclick="togglePane('MITTE_UNTEN')">
+            <span id="MITTE_UNTEN_toggle_icon">[-]</span>
+        </button>
+    </div>
+    <div class="pane-content-body" id="MITTE_UNTEN_content"><h3>Statistische Mittelwerte aller Muster</h3><table border="1" class="dataframe table table-striped profiling-table">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>age</th>
+      <th>has_children</th>
+      <th>married</th>
+      <th>days_since_signup</th>
+      <th>total_trips</th>
+      <th>booking_lead_time_days</th>
+      <th>trip_duration_days</th>
+      <th>total_spend</th>
+      <th>session_duration_seconds</th>
+      <th>page_clicks</th>
+      <th>total_sessions</th>
+      <th>flight_distance_km</th>
+      <th>total_cancellations</th>
+      <th>cancellation_rate</th>
+      <th>conversion_rate</th>
+    </tr>
+    <tr>
+      <th>Cluster_ML</th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>1</th>
+      <td>44.53</td>
+      <td>0.24</td>
+      <td>0.36</td>
+      <td>991.15</td>
+      <td>5.08</td>
+      <td>9.33</td>
+      <td>4.06</td>
+      <td>3271.19</td>
+      <td>134.50</td>
+      <td>18.07</td>
+      <td>8.18</td>
+      <td>6483.82</td>
+      <td>0.00</td>
+      <td>0.00</td>
+      <td>0.62</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>51.57</td>
+      <td>0.46</td>
+      <td>0.93</td>
+      <td>987.31</td>
+      <td>2.86</td>
+      <td>9.79</td>
+      <td>4.06</td>
+      <td>3296.43</td>
+      <td>103.41</td>
+      <td>13.88</td>
+      <td>8.26</td>
+      <td>9048.13</td>
+      <td>0.00</td>
+      <td>0.00</td>
+      <td>0.35</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>32.45</td>
+      <td>0.29</td>
+      <td>0.03</td>
+      <td>989.53</td>
+      <td>2.45</td>
+      <td>12.42</td>
+      <td>4.12</td>
+      <td>3213.73</td>
+      <td>100.39</td>
+      <td>13.47</td>
+      <td>8.16</td>
+      <td>9424.02</td>
+      <td>0.00</td>
+      <td>0.00</td>
+      <td>0.30</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>43.86</td>
+      <td>0.30</td>
+      <td>0.41</td>
+      <td>994.45</td>
+      <td>4.46</td>
+      <td>22.76</td>
+      <td>4.49</td>
+      <td>3533.58</td>
+      <td>884.68</td>
+      <td>41.29</td>
+      <td>8.31</td>
+      <td>6519.87</td>
+      <td>1.03</td>
+      <td>0.25</td>
+      <td>0.54</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>38.94</td>
+      <td>0.40</td>
+      <td>0.44</td>
+      <td>991.02</td>
+      <td>3.03</td>
+      <td>181.56</td>
+      <td>11.51</td>
+      <td>7621.07</td>
+      <td>638.39</td>
+      <td>26.10</td>
+      <td>8.18</td>
+      <td>9091.78</td>
+      <td>0.82</td>
+      <td>0.29</td>
+      <td>0.37</td>
+    </tr>
+  </tbody>
+</table></div></div></div><div class="splitter-handle horizontal-splitter"></div><div id="ANALYSE_CONTAINER_3" class="resizable-pane">
+    <div class="pane-header" id="ANALYSE_CONTAINER_3_header">
+        <h3>Sekundär-Informationen (Rechts)</h3>
+        <button class="toggle-button" onclick="togglePane('ANALYSE_CONTAINER_3')">
+            <span id="ANALYSE_CONTAINER_3_toggle_icon">[-]</span>
+        </button>
+    </div>
+    <div class="pane-content-body" id="ANALYSE_CONTAINER_3_content"><h4>Key Decisions (Rechts)</h4><ul><li>Perk-Wertigkeit</li><li>Testdauer (A/B)</li><li>Rollout-Strategie</li></ul></div></div></div>
+</section>
+<section id="page9" class="tab-pane">
+<div id="MITTEL_BEREICH_RESIZABLE" class="resizable-split-view horizontal-split-wrapper"><div id="ANALYSE_CONTAINER_1" class="resizable-pane">
+    <div class="pane-header" id="ANALYSE_CONTAINER_1_header">
+        <h3>Muster Detail (Links)</h3>
+        <button class="toggle-button" onclick="togglePane('ANALYSE_CONTAINER_1')">
+            <span id="ANALYSE_CONTAINER_1_toggle_icon">[-]</span>
+        </button>
+    </div>
+    <div class="pane-content-body" id="ANALYSE_CONTAINER_1_content"><h2>Ausblick & Implementierung</h2><p>Nächste Schritte: Strategische Validierung der Perk-Zuweisung.</p></div></div><div class="splitter-handle horizontal-splitter"></div><div id="ANALYSE_CONTAINER_2_WRAPPER" class="resizable-pane vertical-split-wrapper"><div id="MITTE_OBEN" class="vertical-pane">
+    <div class="pane-header" id="MITTE_OBEN_header">
+        <h3>Visualisierung Oben (Plot/Bild)</h3>
+        <button class="toggle-button" onclick="togglePane('MITTE_OBEN')">
+            <span id="MITTE_OBEN_toggle_icon">[-]</span>
+        </button>
+    </div>
+    <div class="pane-content-body" id="MITTE_OBEN_content"><p style="text-align: center; margin-top: 20px;">**Strategie-Zusammenfassung**</p></div></div><div class="splitter-handle vertical-splitter"></div><div id="MITTE_UNTEN" class="vertical-pane">
+    <div class="pane-header" id="MITTE_UNTEN_header">
+        <h3>Muster-Index & Kennzahlen (Mitte Unten)</h3>
+        <button class="toggle-button" onclick="togglePane('MITTE_UNTEN')">
+            <span id="MITTE_UNTEN_toggle_icon">[-]</span>
+        </button>
+    </div>
+    <div class="pane-content-body" id="MITTE_UNTEN_content"><h3>Statistische Mittelwerte aller Muster</h3><table border="1" class="dataframe table table-striped profiling-table">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>age</th>
+      <th>has_children</th>
+      <th>married</th>
+      <th>days_since_signup</th>
+      <th>total_trips</th>
+      <th>booking_lead_time_days</th>
+      <th>trip_duration_days</th>
+      <th>total_spend</th>
+      <th>session_duration_seconds</th>
+      <th>page_clicks</th>
+      <th>total_sessions</th>
+      <th>flight_distance_km</th>
+      <th>total_cancellations</th>
+      <th>cancellation_rate</th>
+      <th>conversion_rate</th>
+    </tr>
+    <tr>
+      <th>Cluster_ML</th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>1</th>
+      <td>44.53</td>
+      <td>0.24</td>
+      <td>0.36</td>
+      <td>991.15</td>
+      <td>5.08</td>
+      <td>9.33</td>
+      <td>4.06</td>
+      <td>3271.19</td>
+      <td>134.50</td>
+      <td>18.07</td>
+      <td>8.18</td>
+      <td>6483.82</td>
+      <td>0.00</td>
+      <td>0.00</td>
+      <td>0.62</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>51.57</td>
+      <td>0.46</td>
+      <td>0.93</td>
+      <td>987.31</td>
+      <td>2.86</td>
+      <td>9.79</td>
+      <td>4.06</td>
+      <td>3296.43</td>
+      <td>103.41</td>
+      <td>13.88</td>
+      <td>8.26</td>
+      <td>9048.13</td>
+      <td>0.00</td>
+      <td>0.00</td>
+      <td>0.35</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>32.45</td>
+      <td>0.29</td>
+      <td>0.03</td>
+      <td>989.53</td>
+      <td>2.45</td>
+      <td>12.42</td>
+      <td>4.12</td>
+      <td>3213.73</td>
+      <td>100.39</td>
+      <td>13.47</td>
+      <td>8.16</td>
+      <td>9424.02</td>
+      <td>0.00</td>
+      <td>0.00</td>
+      <td>0.30</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>43.86</td>
+      <td>0.30</td>
+      <td>0.41</td>
+      <td>994.45</td>
+      <td>4.46</td>
+      <td>22.76</td>
+      <td>4.49</td>
+      <td>3533.58</td>
+      <td>884.68</td>
+      <td>41.29</td>
+      <td>8.31</td>
+      <td>6519.87</td>
+      <td>1.03</td>
+      <td>0.25</td>
+      <td>0.54</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>38.94</td>
+      <td>0.40</td>
+      <td>0.44</td>
+      <td>991.02</td>
+      <td>3.03</td>
+      <td>181.56</td>
+      <td>11.51</td>
+      <td>7621.07</td>
+      <td>638.39</td>
+      <td>26.10</td>
+      <td>8.18</td>
+      <td>9091.78</td>
+      <td>0.82</td>
+      <td>0.29</td>
+      <td>0.37</td>
+    </tr>
+  </tbody>
+</table></div></div></div><div class="splitter-handle horizontal-splitter"></div><div id="ANALYSE_CONTAINER_3" class="resizable-pane">
+    <div class="pane-header" id="ANALYSE_CONTAINER_3_header">
+        <h3>Sekundär-Informationen (Rechts)</h3>
+        <button class="toggle-button" onclick="togglePane('ANALYSE_CONTAINER_3')">
+            <span id="ANALYSE_CONTAINER_3_toggle_icon">[-]</span>
+        </button>
+    </div>
+    <div class="pane-content-body" id="ANALYSE_CONTAINER_3_content"><h4>Monitoring (Rechts)</h4><p>Monitoring von **Churn Rate, AOV** und **Purchase Frequency**.</p><hr><p>**TEMP_Clear:** Allgemeine Bereinigungsvorschläge zum Kopieren</p></div></div></div>
+</section>
+<section id="page10" class="tab-pane" style="flex-direction: column; overflow: auto;">
+<div class="full-width-content">
+<h2>Globaler Einstellungs-Index (TEMP_Clear)</h2>
+<ul><li>**TEMP_Clear (Allgemein):** Allgemeine Bereinigungsvorschläge zum Kopieren</li><li>**TEMP_Clear_ML (Vorbereitung):** Vorschläge zur Vorverarbeitung für ML:</li><li>**Alle Vorkommen des Begriffs 'Muster'** wurden mit **'Muster'** ersetzt (Regel eingehalten).</li></ul>
+</div>
+</section>
+</div>
+</div>
+<script>
+
+// --- TAB NAVIGATION ---
+function openTab(evt, pageId) {
+    var i, tabcontent, tablinks;
+    tabcontent = document.getElementsByClassName("tab-pane");
+    for (i = 0; i < tabcontent.length; i++) { 
+        tabcontent[i].style.display = "none"; 
+        tabcontent[i].classList.remove("active-page"); 
+    }
+    tablinks = document.getElementsByClassName("tab-button");
+    for (i = 0; i < tablinks.length; i++) { 
+        tablinks[i].classList.remove("active"); 
+    }
+
+    const targetPage = document.getElementById(pageId);
+    if (targetPage) {
+        targetPage.style.display = "flex"; 
+        targetPage.classList.add("active-page"); 
+
+        const buttonText = evt.currentTarget.textContent;
+        document.getElementById("current_page_title").textContent = pageId !== "page1" ? buttonText.split(":")[1].trim() : "Dashboard: Kunden-Segmentierung & Perk-Zuweisung";
+
+        if (typeof Plotly !== 'undefined') { setTimeout(() => window.dispatchEvent(new Event('resize')), 100); } 
+    }
+    evt.currentTarget.classList.add("active");
+}
+
+// --- PANE TOGGLE (Minimierung) ---
+function togglePane(paneId) {
+    const content = document.getElementById(paneId + '_content');
+    const parentPane = document.getElementById(paneId);
+    const toggleIcon = document.getElementById(paneId + '_toggle_icon'); 
+
+    if (!content || !parentPane || !toggleIcon) return;
+
+    // 1. Toggle the content body visibility & minimized class
+    content.classList.toggle('collapsed');
+    const isCollapsed = content.classList.contains('collapsed');
+    parentPane.classList.toggle('minimized', isCollapsed); 
+
+    // Icon-Update
+    toggleIcon.textContent = isCollapsed ? '[+]' : '[-]'; 
+
+    // 2. Handle Vertical Split (Mitte Oben/Unten)
+    if (parentPane.classList.contains('vertical-pane')) {
+        const wrapper = parentPane.parentElement;
+        const allVerticalPanes = Array.from(wrapper.children).filter(el => el.classList.contains('vertical-pane'));
+
+        if (isCollapsed) {
+            parentPane.style.flex = '0 0 auto'; 
+            allVerticalPanes.forEach(pane => {
+                if (!pane.classList.contains('minimized')) {
+                    pane.style.flex = '1'; 
+                }
+            });
+        } else {
+            // Wenn der Pane wieder geöffnet wird, setze ihn auf den gespeicherten Wert
+            const isTop = parentPane.id === 'MITTE_OBEN';
+            const defaultHeight = isTop 
+                ? (localStorage.getItem('LS_MITTE_OBEN_HEIGHT') || '50') 
+                : (100 - parseFloat(localStorage.getItem('LS_MITTE_OBEN_HEIGHT') || '50')).toFixed(2);
+
+            parentPane.style.flex = '0 0 ' + defaultHeight + '%';
+
+            // Stelle sicher, dass der andere Pane den Rest übernimmt
+            const otherPaneId = isTop ? 'MITTE_UNTEN' : 'MITTE_OBEN';
+            const otherPane = document.getElementById(otherPaneId);
+            if (otherPane && !otherPane.classList.contains('minimized')) {
+                const otherHeight = (100 - parseFloat(defaultHeight)).toFixed(2);
+                otherPane.style.flex = '0 0 ' + otherHeight + '%';
+            } else if (otherPane) {
+                 otherPane.style.flex = '0 0 auto';
+            }
+        }
+    } 
+    // 3. Handle Horizontal Split (Links, Mitte, Rechts) 
+    else if (parentPane.classList.contains('resizable-pane') && parentPane.parentElement.classList.contains('horizontal-split-wrapper')) {
+        const C1 = document.getElementById('ANALYSE_CONTAINER_1');
+        const C2 = document.getElementById('ANALYSE_CONTAINER_2_WRAPPER');
+        const C3 = document.getElementById('ANALYSE_CONTAINER_3');
+
+        // Wenn minimiert:
+        if (isCollapsed) {
+             parentPane.style.flex = '0 0 40px';
+             C2.style.flex = '1'; // C2 nimmt den Rest
+        } else {
+             // Wenn maximiert: Setze auf gespeicherten oder Standardwert
+             const savedWidth = localStorage.getItem('LS_' + parentPane.id + '_WIDTH');
+             parentPane.style.flex = '0 0 ' + (savedWidth || '20') + '%';
+             C2.style.flex = '1';
+        }
+    }
+
+    if (typeof Plotly !== 'undefined') { setTimeout(() => window.dispatchEvent(new Event('resize')), 350); }
+}
+
+// --- RESIZING LOGIK (V10.8 - Korrigierte Persistenz) ---
+function enableSplitter(splitterHandle) {
+    const isHorizontal = splitterHandle.classList.contains('horizontal-splitter');
+    const container = isHorizontal 
+        ? splitterHandle.parentElement.closest('.resizable-split-view')
+        : splitterHandle.parentElement.closest('.vertical-split-wrapper');
+    if (!container) return; 
+
+    let prevPane = splitterHandle.previousElementSibling;
+    while (prevPane && !prevPane.classList.contains('resizable-pane') && !prevPane.classList.contains('vertical-pane')) {
+        prevPane = prevPane.previousElementSibling;
+    }
+    let nextPane = splitterHandle.nextElementSibling;
+    while (nextPane && !nextPane.classList.contains('resizable-pane') && !nextPane.classList.contains('vertical-pane')) {
+        nextPane = nextPane.nextElementSibling;
+    }
+    if (!prevPane || !nextPane) return; 
+    let isDragging = false;
+    let start; // Für den relativen VERTICAL SPLIT
+    const onMouseMove = (e) => {
+        if (!isDragging) return; 
+        const currentPos = isHorizontal ? e.clientX : e.clientY;
+        const totalSize = isHorizontal ? container.offsetWidth : container.offsetHeight;
+        const MIN_SIZE_PERCENT = 5; 
+        const MIN_SIZE_PX = totalSize * (MIN_SIZE_PERCENT / 100); 
+        let moveSuccessful = false;
+        // --- HORIZONTAL SPLIT (C1 | C2 | C3) - ABSOLUT-LOGIK ---
+        if (container.classList.contains('horizontal-split-wrapper')) {
+            const C1 = document.getElementById('ANALYSE_CONTAINER_1');
+            const C3 = document.getElementById('ANALYSE_CONTAINER_3');
+            const containerLeft = container.getBoundingClientRect().left; 
+            const containerRight = container.getBoundingClientRect().right;
+            // SPLITTER 1 (C1 | C2)
+            if ((prevPane === C1 && nextPane === C2)) {
+                let newC1Width = currentPos - containerLeft; 
+                if (newC1Width >= MIN_SIZE_PX && (totalSize - newC1Width - C3.offsetWidth - 15) >= MIN_SIZE_PX) { // -15 für Splitter-Breite und Margins
+                    const newC1Percent = (newC1Width / totalSize) * 100;
+                    C1.style.flex = '0 0 ' + newC1Percent.toFixed(2) + '%';
+                    C2.style.flex = '1'; 
+                    moveSuccessful = true;
+                }
+            // SPLITTER 2 (C2 | C3)
+            } else if (prevPane === C2 && nextPane === C3) {
+                let newC3Width = containerRight - currentPos;
+
+                if (newC3Width >= MIN_SIZE_PX && (totalSize - C1.offsetWidth - newC3Width - 15) >= MIN_SIZE_PX) { // -15 für Splitter-Breite und Margins
+                    const newC3Percent = (newC3Width / totalSize) * 100;
+                    C3.style.flex = '0 0 ' + newC3Percent.toFixed(2) + '%'; 
+                    C2.style.flex = '1';
+                    moveSuccessful = true;
+                }
+            }
+        // --- VERTICAL SPLIT (2-Wege Split) - RELATIVE DELTA LOGIK ---
+        } else if (container.classList.contains('vertical-split-wrapper')) {
+            const delta = currentPos - start; // Relative Verschiebung
+            const currentPrevSize = isHorizontal ? prevPane.offsetWidth : prevPane.offsetHeight;
+            let newPrevSize = currentPrevSize + delta;
+
+            if (newPrevSize >= MIN_SIZE_PX && (totalSize - newPrevSize) >= MIN_SIZE_PX) {
+                const newPrevPercent = (newPrevSize / totalSize) * 100;
+                const remainingSizePercent = 100 - newPrevPercent;
+
+                prevPane.style.flex = '0 0 ' + newPrevPercent.toFixed(2) + '%';
+                nextPane.style.flex = '0 0 ' + remainingSizePercent.toFixed(2) + '%'; 
+                moveSuccessful = true;
+            }
+        }
+        if (moveSuccessful) {
+            if (typeof Plotly !== 'undefined') { window.dispatchEvent(new Event('resize')); }
+            // Wichtig: Start nur für die DELTA-basierte Logik (Vertical Split) aktualisieren
+            if (!isHorizontal) { 
+                start = currentPos; 
+            }
+        }
+    };
+    const onMouseUp = () => {
+        isDragging = false;
+        document.removeEventListener('mousemove', onMouseMove);
+        document.removeEventListener('mouseup', onMouseUp);
+        container.style.userSelect = 'auto';
+        container.style.cursor = 'auto';
+        // NEU: Speichern der finalen Positionen in localStorage (Persistenz Fix V10.8)
+        if (container.classList.contains('horizontal-split-wrapper')) {
+            const C1 = document.getElementById('ANALYSE_CONTAINER_1');
+            const C3 = document.getElementById('ANALYSE_CONTAINER_3');
+            // Flex-Basis (z.B. '0 0 25.50%') extrahieren und speichern
+            const C1_flex = C1.style.flex.match(/(\d+\.?\d*)%/);
+            const C3_flex = C3.style.flex.match(/(\d+\.?\d*)%/);
+            if (C1_flex) {
+                localStorage.setItem('LS_ANALYSE_CONTAINER_1_WIDTH', C1_flex[1]);
+            }
+            if (C3_flex) {
+                localStorage.setItem('LS_ANALYSE_CONTAINER_3_WIDTH', C3_flex[1]);
+            }
+        }
+        // Vertical Split (MITTE_OBEN | MITTE_UNTEN)
+        else if (container.classList.contains('vertical-split-wrapper')) {
+             // Direkter Zugriff auf den oberen Container (sicherer als prevPane/nextPane)
+            const V_TOP = document.getElementById('MITTE_OBEN'); 
+
+            const V_TOP_flex = V_TOP.style.flex.match(/(\d+\.?\d*)%/);
+
+            if (V_TOP_flex) {
+                 localStorage.setItem('LS_MITTE_OBEN_HEIGHT', V_TOP_flex[1]);
+            }
+        }
+        if (typeof Plotly !== 'undefined') {
+            window.dispatchEvent(new Event('resize'));
+        }
+    };
+    splitterHandle.addEventListener('mousedown', (e) => {
+        e.preventDefault();
+        isDragging = true;
+        // Startposition nur für den relativen Vertical Split setzen 
+        start = isHorizontal ? e.clientX : e.clientY; 
+
+        document.addEventListener('mousemove', onMouseMove);
+        document.addEventListener('mouseup', onMouseUp);
+        container.style.userSelect = 'none';
+        container.style.cursor = isHorizontal ? 'col-resize' : 'row-resize';
+    });
+}
+// NEU: Funktion zum Laden der gespeicherten Positionen
+function loadAndApplySizes() {
+    const C1 = document.getElementById('ANALYSE_CONTAINER_1');
+    const C2 = document.getElementById('ANALYSE_CONTAINER_2_WRAPPER');
+    const C3 = document.getElementById('ANALYSE_CONTAINER_3');
+    const V_TOP = document.getElementById('MITTE_OBEN');
+    const V_BOTTOM = document.getElementById('MITTE_UNTEN');
+    const C1_DEFAULT = '20';
+    const C3_DEFAULT = '20';
+    const V_TOP_DEFAULT = '50';
+    // --- Horizontal Load (C1, C2, C3) ---
+    const savedC1Width = localStorage.getItem('LS_ANALYSE_CONTAINER_1_WIDTH');
+    const savedC3Width = localStorage.getItem('LS_ANALYSE_CONTAINER_3_WIDTH');
+    if (C1) C1.style.flex = '0 0 ' + (savedC1Width || C1_DEFAULT) + '%';
+    if (C3) C3.style.flex = '0 0 ' + (savedC3Width || C3_DEFAULT) + '%';
+    if (C2) C2.style.flex = '1'; // Mitte ist immer flex: 1
+    // --- Vertical Load (Mitte Oben/Unten) ---
+    const savedVTopHeight = localStorage.getItem('LS_MITTE_OBEN_HEIGHT');
+    if (V_TOP && V_BOTTOM) {
+        const topHeight = parseFloat(savedVTopHeight || V_TOP_DEFAULT).toFixed(2);
+        const bottomHeight = (100 - parseFloat(topHeight)).toFixed(2);
+
+        // Beide müssen eine feste Basis erhalten, um sich die Position zu merken
+        V_TOP.style.flex = '0 0 ' + topHeight + '%';
+        V_BOTTOM.style.flex = '0 0 ' + bottomHeight + '%';
+    }
+}
+// Initialisiere alle Interaktionen beim Laden des Fensters
+window.onload = function() {
+    // 0. Lade gespeicherte Positionen ZUERST
+    loadAndApplySizes(); 
+    // 1. Initialisiere alle Splitter
+    const splitters = document.querySelectorAll('.splitter-handle');
+    splitters.forEach(enableSplitter);
+    // 2. Stellt sicher, dass die erste Seite aktiv ist und setzt den Titel
+    const firstTab = document.querySelector(".tab-button"); 
+    if (firstTab) {
+        if (!document.querySelector(".tab-pane.active-page")) {
+            firstTab.classList.add('active'); 
+            const targetPageIdMatch = firstTab.getAttribute('onclick').match(/'(.*?)'/);
+            const targetPageId = targetPageIdMatch ? targetPageIdMatch[1] : null;
+            const targetPage = targetPageId ? document.getElementById(targetPageId) : null;
+            if(targetPage) {
+                targetPage.style.display = "flex";
+                targetPage.classList.add("active-page"); 
+            }
+        }
+        document.getElementById("current_page_title").textContent = "Dashboard: Kunden-Segmentierung & Perk-Zuweisung";
+    }
+};
+    
+</script></body></html>

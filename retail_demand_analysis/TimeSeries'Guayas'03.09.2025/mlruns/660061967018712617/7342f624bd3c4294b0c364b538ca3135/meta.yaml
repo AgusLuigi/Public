@@ -1,0 +1,14 @@
+artifact_uri: file:///Users/cristallagus/Desktop/GitHub/retail_demand_analysis/mlruns/660061967018712617/7342f624bd3c4294b0c364b538ca3135/artifacts
+end_time: 1762305244314
+entry_point_name: ''
+experiment_id: '660061967018712617'
+lifecycle_stage: active
+run_id: 7342f624bd3c4294b0c364b538ca3135
+run_name: Optimized_XGBoost
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1762305241370
+status: 3
+tags: []
+user_id: cristallagus

@@ -1,0 +1,215 @@
+Kursprojekt
+Projektübersicht – Was Sie im Laufe des 4-wöchigen Kurses bauen werden
+Im kommenden Monat arbeiten Sie an einem durchgängigen Prognoseprojekt und fügen jede Woche eine neue Ebene hinzu. Am Ende der Sitzung werden Sie Folgendes erstellt haben:
+Explorative Datenanalyse (EDA)
+Klare Visualisierungen und numerische Zusammenfassungen, die Trends, Saisonalität, Werbeaktionen, Feiertage und Ausreißer im Favorita-Datensatz aufzeigen.
+Datenaufbereitungspipeline
+Lückengefüllte Kalender, speziell entwickelte Kalenderfunktionen, Verzögerungsvariablen und alle erforderlichen Transformationen – bereit für die Modelleingabe.
+Lagerartikelprognosen
+Ein maschinelles Lernmodell, das die tägliche Nachfrage nach jedem Produkt in jedem Geschäft in der Provinz Guayas vorhersagt .
+Zielprognosehorizont: Januar – März 2014 (einschließlich).
+Diese Woche verwenden wir den kompletten Datensatz; die zeitliche Aufteilung erfolgt später beim Trainieren des Modells.
+Leichtgewichtige Web-App
+Ein einfaches Frontend (denken Sie an „eine Seite + Endpunkt“), über das die Bedarfsplaner von Guayas ein Produkt-Filial-Paar auswählen und Ihre Prognose abrufen können.
+Live-Demo & Video-Rundgang
+Sie präsentieren die wichtigsten Ergebnisse, zeigen die App und teilen eine kurze Aufnahme zur Überprüfung.
+Die Notebooks der einzelnen Wochen bauen aufeinander auf. Achten Sie daher auf sauberen Code und führen Sie regelmäßig Commits durch. In Woche 4 verfügen Sie über eine portfoliofähige, vollständig reproduzierbare Lösung zur Bedarfsprognose.
+ 
+
+# Woche 1 – Checkliste & Fahrplan
+Diese Woche dreht sich alles darum, Ihren Arbeitsbereich einzurichten und die Rohdaten auf einen überschaubaren Teil mit Fokus auf die Provinz Guayas zu reduzieren . Folgen Sie den unten stehenden Schritten und haken Sie diese nach und nach ab.
+ 
+## Schalten Sie Ihr Arbeitsnotizbuch ein.
+Erstelle (oder verwende) ein GitHub-Repository für das Kursprojekt. Benenne es beispielsweise „Einzelhandelsnachfrageanalyse“. So findest du alle Notebooks, Skripte und den gesamten Commit-Verlauf an einem Ort.
+Öffnen Sie ein neues Google Colab -Notebook in Ihrem Drive-Ordner mit dem Namen data_prep.ipynb.
+Speichern Sie eine erste Kopie auf GitHub ( File → Save a copy in GitHub), damit das Repository seinen ersten Commit hat.
+ 
+## Daten laden
+    - Lesen Sie alle Support-CSVs ( items.csv, stores.csv, oil.csv, holidays.csv, transactions.csv).
+    - Für train.csvdie größte Datei streamen wir sie in Blöcken , wie wir es in unserer EDA-Vorlesung gesehen haben. Diesmal filtern wir sie, indem wir nur die Geschäfte in der "Guayas"Region einbeziehen.
+    - Für schnellere Experimente sollte die Stichprobengröße reduziert werden. Um den Rechenaufwand zu verringern, werden zufällig 300.000 Zeilen ausgewählt .
+    - Behalten Sie nur die drei größten Produktfamilien bei (gemessen an der Anzahl der verschiedenen Artikel in jeder Familie).
+        Durch die Beschränkung auf die wichtigsten Produktfamilien verringert sich die Anzahl der SKU-basierten Zeitreihen, die Sie diese Woche verarbeiten müssen.
+
+Versuche es zunächst selbst. Falls du nicht weiterkommst, öffne den Tipp; falls das nicht ausreicht, wirf einen Blick in die Lösung.
+
+- Hinweis
+- Lösung
+    - Überprüfen Sie Ihren Fortschritt:
+        - Speichern Sie die gefilterten Daten df_trainals Pickle (oder Parquet) auf Drive(ordnerablage), damit Sie sie neu laden können, ohne die Chunk-Schleife erneut ausführen zu müssen.
+        - Pushe das Notebook erneut auf GitHub mit einer Commit-Nachricht wie „Woche 1 Datenvorbereitung: Chunk laden, Guayas-Filter, Top-3-Familien“ .
+ 
+## Datenexploration & Merkmalsaufbau (folgen Sie der gleichen Vorgehensweise wie in den Vorlesungen, wenden Sie sie aber jetzt auf Guayas an) :
+🔥 Wichtiger Hinweis!
+Wenn Google Colab während irgendeiner Phase dieses Projekts beim Ausführen Ihres Codes abstürzt, bedeutet dies, dass der Laufzeittyp geändert werden muss.
+
+Schritt 1: Gehen Sie zur Registerkarte „Laufzeit“ und wählen Sie „Laufzeittyp ändern“ .
+
+Schritt 2: Wählen Sie in einem Popup-Fenster entweder die eine v2-8 TPUoder die andere Option aus T4 GPUund klicken Sie dann auf „Speichern“ Ihrer Auswahl.
+
+Schritt 3: Führen Sie den zuvor abgestürzten Code erneut aus. Er sollte nun funktionieren.
+
+    - Datenqualitätsprüfungen
+        - Fehlende Werte: Nullwerte in jeder Spalte erkennen und behandeln.
+        - Fehlende Kalendertage: Erstellen Sie für jedes (Geschäft, Artikel) einen vollständigen Tagesindex und füllen Sie fehlende Tage mit unit_sales = 0.
+        - Ausreißer: Auf unmögliche negative Werte oder extreme Spitzenwerte prüfen unit_sales; gegebenenfalls kürzen, ersetzen oder kennzeichnen.
+    - Feature-Entwicklung
+        - Erstellen Sie die datumsbasierten Funktionen aus den Theorielektionen yearnach – z. monthB. day_of_weekgleitende Mittelwerte usw.
+        - Füge alle zusätzlichen Merkmale hinzu , die deiner Meinung nach für Guayas wichtig sein könnten (z. B. Aktionskennzeichnungen, verderbliche Waren, und erkunde andere Tische! Sei kreativ!).
+    - Setzen Sie Ihre Arbeit fort
+        - Exportieren Sie den bereinigten und hervorgehobenen DataFrame nach Drive guayas_prepared.csv(Sie werden ihn in Woche 2 wieder laden).
+ 
+## EDA für die Region von Interesse ( "Guayas")
+    - Übertragen und erweitern Sie die visuellen Fragestellungen, die Sie für Pichincha beantwortet haben – Trendlinien, Heatmaps zur Saisonalität, Auswirkungen von Feiertagen, Anteil verderblicher Waren – und konzentrieren Sie sich nun ausschließlich auf die Filialen in Guayas.
+    - Gehen Sie der Sache auf den Grund, wenn Sie etwas Interessantes entdecken; tiefergehende Erkenntnisse zahlen sich später in einer höheren Modellgenauigkeit aus.
+ 
+## Auf GitHub einchecken
+    - Wenn Ihr Notebook fehlerfrei durchläuft, wählen Sie Datei → Speichern Sie eine Kopie in GitHub und laden Sie diese mit einer aussagekräftigen Commit-Nachricht hoch (z. B. „Woche 1: Guayas EDA + Feature-Vorbereitung“).
+ 
+☝
+Merke: Je sauberer und besser verstanden deine Daten sind, desto leistungsfähiger wird dein Modell sein. Betrachte diesen Erkundungsschritt als Grundlage für alles Folgende.
+
+------------------------------------------------------------------------ nur für person nicht für KI gedacht der folgende Text
+🚀
+Wichtig – Die Vorlesungen sind nur Ihr Startpunkt.
+Im Kurs haben wir die grundlegenden Schritte behandelt – grundlegende Datenbereinigung, Kalenderfüllungen und einige Feature-Ideen –, um Ihnen den Umgang mit Zeitreihendaten zu zeigen. Doch echte Erkenntnisse (und eine höhere Modellgenauigkeit) erhält man durch weiterführende Analysen:
+Verknüpfen Sie mehrere Tabellen: Versuchen Sie es beispielsweise mit Ölpreisen nach Geschäftsregion, Transaktionszahlen oder Wetterdaten, falls Sie diese finden können.
+Stellen Sie neue Fragen: Wirken sich Werbeaktionen unterschiedlich auf die Nachfrage nach verderblichen bzw. nicht verderblichen Waren aus? Führt die Woche vor dem Zahltag zu einem Nachfrageanstieg in bestimmten Produktkategorien?
+Erfinden Sie individuelle Funktionen: Flaggen für Fußballspieltage, kumulierte Monatsumsätze oder einen Zähler für die Tage seit dem letzten Warenausverkauf.
+Betrachten Sie das Notizbuch als Spielwiese – experimentieren Sie, verbessern Sie Ihre Vorgehensweise und dokumentieren Sie Ihre Erkenntnisse. Je mehr Aspekte Sie jetzt erkunden, desto solider (und besser zu verteidigen) wird Ihr Modell später sein.
+------------------------------------------------------------------------ ab hier wieder KI
+
+Kursprojekt: Aufgaben für die zweite Woche
+Diese Woche haben Sie verschiedene Methoden der Zeitreihenmodellierung kennengelernt. Jetzt ist es Zeit, sie in die Praxis umzusetzen!
+Erinnern Sie sich, dass wir letzte Woche die Daten aus "Guayas"der Region vollständig vorbereitet und untersucht haben? Diese Woche arbeiten wir weiter mit diesen vorverarbeiteten Daten, trainieren jetzt aber ein XGBoost-Modell, das die Nachfrage prognostiziert.
+
+# Woche 2
+Ziel: Setzen neuen Zeitreihenkenntnisse in die Praxis um, indem Sie ein XGBoost-Nachfrageprognosemodell (und optional ein LSTM) für den Datensatz der Region Guayas erstellen .
+
+## Schritte
+    - Laden Sie die Daten: Öffnen Sie die vorverarbeitete CSV-/Parquet-Datei aus Woche 1. Vergewissern Sie sich, dass sie nur Datensätze aus Guayas enthält .
+    - Behalten Sie die Top-3-Elementfamilien: Aus der EDA der letzten Woche sollten Sie herausgefunden haben GROCERY I, dass BEVERAGESund CLEANINGdie drei Top-Familien sind. Filtern Sie den Datenrahmen, sodass nur diese drei Familien übrig bleiben .
+    - Kalenderfenster begrenzen: Für diesen Sprint modellieren wir nur den 1. Januar bis 31. März 2014 .
+        Hier ist der Hinweis, wie Sie es machen können:
+        - max_date = '2014-04-01'  train = train[(train['date'] < max_date)]
+
+    - Feature-Engineering
+        - Verzögerungen/Rollen und andere Interaktionsbegriffe, von denen Sie denken, dass sie XGBoost helfen könnten.
+        - Optionale Bonusfunktionen:
+            - Metadaten speichern : Zusammenführen df_storesamstore_nbr
+            - Artikelmetadaten : Zusammenführen df_itemsamitem_nbr
+    - Aufteilung Training/Test: Chronologische Aufteilung: z. B. Training im Januar und Februar , Test im März . Kein zufälliges Mischen!
+    - Trennen Sie Features (Spaltennamen, die wir für Vorhersagen verwenden) und Target (das Ziel, das wir vorhersagen werden) von den Features. Tun Sie dies sowohl für Trainings- als auch für Testdatenteile.
+    - Passen Sie den XGBoost-Regressor an
+    - Auswerten und Visualisieren:
+        - Vorhersagen für X_test, MAE/RMSE berechnen.
+        - Diagramm y_testvs. y_predSchätzen Sie Tage mit zu niedrigen/zu hohen Prognosen.
+    - Zusätzliche Herausforderung!
+        - Erwägen Sie den Aufbau und die Erprobung eines LSTM-Modells und vergleichen Sie es mit dem XGBoost-Modell.
+    - Speichern Sie das Colab-Notizbuch in Ihrem GitHub-Repository
+ 
+## Ergebnisse
+    - Ein sauberes Colab-Notizbuch mit:
+        - Datenvorbereitung, Feature Engineering, Modelltraining, Diagramme, Metriken.
+        - (Optional) LSTM-Abschnitt.
+Übertragen Sie das Notebook in Ihr GitHub-Repository.
+
+
+Kursprojekt: Aufgaben für die dritte Woche
+Sie wissen jetzt, wie Sie nach den besten Hyperparametern suchen , Modelle bewerten und Experimente verfolgen . Lassen Sie uns dies mit dem Projekt Corporación Favorita in die Praxis umsetzen.
+
+# Woche 3
+Wir bleiben in Ihrem vorhandenen Colab-Notizbuch (wie im Projekt der letzten Woche) und führen die folgenden Schritte aus:
+    - Bewerten Sie die XGBoost-Basislinie der letzten Woche mit realen Zahlen (wie MAE, RMSE, Bias, MAD, rMAD, MAPE).
+    - Richten Sie MLflow ein . Richten Sie ein Experiment und einen Lauf ein, der die Ergebnisse des Modells speichert, das wir letzte Woche erstellt und oben ausgewertet haben. Protokollieren Sie einen ersten Lauf (Basis-XGB): Parameter, Metriken und ein Prognosediagramm.
+    - Optimieren Sie XGBoost ( finden Sie den besten Satz an Hyperparametern), trainieren Sie erneut mit der besten Konfiguration, bewerten Sie erneut und protokollieren Sie einen zweiten Lauf .
+    - (Optionaler Bonus) Machen Sie dasselbe für das LSTM-Modell und optimieren Sie es anschließend. Protokollieren Sie die Ergebnisse für die Basislinie + optimiert.
+    - Speichern Sie Ihre Vorverarbeitungsartefakte (Skalierer + Feature-Spalten) für nächste Woche.
+    - Versionieren Sie Ihre Arbeit : Übertragen Sie das aktualisierte Notebook auf GitHub.
+☝🏼
+Kurztipp für Sprint 3
+Wenn Colab oder Jupyter sehr langsam läuft oder sogar abstürzt, liegt das normalerweise daran, dass Ihre Rastersuche zu viele Kombinationen enthält – es kann ewig dauern, bis sie abgeschlossen ist!
+Folgendes können Sie tun:
+Seien Sie geduldig und lassen Sie es laufen (die perfekte Zeit, um ins Fitnessstudio zu gehen, Gitarre zu spielen oder etwas Lustiges zu tun).
+Oder beschleunigen Sie die Arbeit, indem Sie bei Ihrer Rastersuche weniger Parameter verwenden, sodass weniger Kombinationen ausgeführt werden.
+
+Hinweis: Zu Beginn der Lektionen haben wir jede Hyperparameter-Kombination in MLflow protokolliert, damit wir in der Benutzeroberfläche einen Gewinner auswählen konnten. Für dieses Projekt ist das nicht erforderlich. Protokollieren Sie nur zwei Läufe :
+    - Basismodell (vor der Optimierung).
+    - Bestes Modell nach der Optimierung (der Grid/RandomizedSearchCV-Gewinner).
+Sie können den Code dieser Woche anpassen, indem Sie die MLflow-Protokollierung außerhalb der Suchschleife verschieben und nur die endgültig ausgewählte Konfiguration protokollieren.
+
+Kursprojekt: Aufgaben für die vierte Woche
+
+Diese Woche haben Sie zwei Möglichkeiten:
+    - Erstelle eine kleine Streamlit-App
+        - Zielgruppe: Bedarfsplaner in der Region Guayas .
+        - Ziel: Prognosen mit dem besten Modell untersuchen, das Sie in Sprint 3 trainiert haben.
+        - Anforderungen:
+            - Prognosezeitraum Januar–März 2014 .
+            - Stellen Sie die Prognosen in einem übersichtlichen Diagramm dar.
+            - Mehrtägige (N-tägige) Vorhersagen zulassen.
+    - Optimieren Sie Ihr Projekt für Ihr Portfolio
+        - Konzentriere dich auf eine saubere Strukturierung deines Codes.
+        - Fügen Sie eine klare Dokumentation hinzu.
+        - Bereiten Sie Ihre Präsentation vor.
+        - Stelle sicher, dass es sich um ein gut organisiertes Portfolio-Projekt handelt, das du auf deinem GitHub-Konto präsentieren kannst.
+# Woche 4
+## Option 1 Ziele Details – Entwicklung und Veröffentlichung der Streamlit-Vorhersage-App
+    - Klonen Sie Ihr bestehendes retail_demand_forecastRepository (erstellt in Sprint 1) auf Ihren Computer und arbeiten Sie darin (dies geschieht mit Jupyter Notebook, nicht mit Google Colab).
+    - Wechseln Sie auf Ihrem Computer in den   retail_demand_forecastentsprechenden Ordner (das ist das Repository, das Sie gerade geklont haben). Erstellen Sie die Streamlit-App-Struktur (der Jupyter-Dateibrowser ist ausreichend):
+        - app/main.py(UI), app/config.py(Pfade/URIs/Konstanten),app/__init__.py
+        - model/model_utils.py,model/__init__.py
+        - data/data_utils.py,data/__init__.py
+        - mlflow_results/(Lokaler MLflow-Speicher). Verwenden Sie Ihr bestes Modell aus Sprint 3 (den Lauf mit der besten Validierungsmetrik).
+        - Erstellen Sie die requirements.txtDatei mit den Anforderungen für die Pakete.
+
+README : Erläuterung des Zwecks, der Modellwahl und der Leistung, der Konfiguration/Ausführung sowie Hinzufügen von Screenshots der lokalen Anwendung.
+Den Code auf GitHub hochladen (keine großen Artefakte committen) und den Repo-Link einreichen.
+Verwenden Sie den Link zum Repository auf GitHub, um Ihr Projekt zur Überprüfung einzureichen.
+
+☝🏼
+Schnelltipp für Sprint 4
+Falls Jupyter beim Training der LSTM-Modelle extrem  langsam ist (was normal ist), können Sie es trotzdem abschließen, wenn Sie warten. Wenn Sie es jedoch schneller haben möchten:
+    - Verwenden Sie weniger Parameter in Ihrer Gittersuche, oder
+    - Wählen Sie XGBoost für den Einsatz in Streamlit anstelle eines LSTM.
+
+## Ergebnisse & Fokus der Überprüfung
+- Funktionierende App (lokal), die Vorhersagen für Januar bis März 2014 für eine Guayas -Serie anzeigt.
+- Codequalität : saubere Trennung in app/, data/, model/; keine schwerwiegenden Artefakte in Git.
+- README : Zweck, Modellwahl (warum es das „beste“ ist), wichtige Kennzahlen aus Sprint 3, Einrichtungs-/Ausführungsanweisungen, Screenshots.
+- Notizbücher aus den Sprints 2–3: Aufräumen, Kommentare hinzufügen; sie werden ebenfalls überprüft.
+
+-----------
+## Bonus: Streamlit-Selektoren
+Idee: Nutzern ermöglichen, in Streamlit einen Shop und eine Artikelnummer für Vorhersagen auszuwählen .
+Pythin code =
+store = st.selectbox("Store", sorted({s for s,_ in SERIES.keys()}))
+sku   = st.selectbox("Item (SKU)", sorted({i for s,i in SERIES.keys() if s == store}))
+file_id = SERIES[(store, sku)]
+-----------
+
+Hinweis : Wenn die Zeit abläuft
+
+Nur wenn die Zeit abläuft:
+Wählen Sie einen (oder mehrere) Shop(s) + eine (oder mehrere) Artikelnummer(n) (einzelne Serie), um die App schnell und zuverlässig zu halten.
+Müssen ältere Notebooks aktualisiert werden?
+Woche 2 (EDA):  Keine Änderung erforderlich. Ihre EDA kann weiterhin breiter gefasst bleiben (Guayas + Top-Familien).
+Woche 3 (Modellierung):  Ja, das Modell und die Daten müssen mit der von Ihnen verwendeten Datenreihe übereinstimmen.
+Wenn Ihr bestes Modell für alle Shops/SKUs oder für einen anderen Shop/eine andere SKU trainiert wurde , gilt Folgendes:
+Trainiere/evaluiere das Training/die Auswertung für den ausgewählten Shop/die ausgewählte SKU und protokolliere diesen Lauf in MLflow, oder
+Ändern Sie die App so, dass sie die tatsächlich trainierten Serien ausliefert .
+Artefakte erneut exportieren (falls Sie neu trainieren): serialisierte Dateien , df_filteredund die App aktualisieren ( , ).scaler.pklfeature_cols.jsonconfig.pyMODEL_URIFILE_IDS["train"]
+Minimal funktionsfähige App: eine Guayas -Filiale – SKU mit Prognosen für Januar bis März 2014, unter Verwendung des am besten passenden Modells aus Woche 3.
+
+Details zu Option 2
+Ergebnisse & Fokus der Überprüfung
+- Codequalität : saubere Trennung in app/, data/, model/; keine schwerwiegenden Artefakte in Git.
+- README : Zweck, Modellwahl (warum es das „beste“ ist), wichtige Kennzahlen aus Sprint 3, Einrichtungs-/Ausführungsanweisungen, Screenshots.
+- Notizbücher aus den Sprints 2–3: Aufräumen, Kommentare hinzufügen; sie werden ebenfalls überprüft.
+- Alles schön übersichtlich in GIT dargestellt.
+
+## Präsentationstag 
+- Problemkontext (Bedarfsplanung für Guayas).
+- Modellauswahl & Leistung (Kennzahlen aus Sprint 3; warum dieses Modell?).
+- App-Überblick: Datumsauswahl, N-Tage-Modus, Diagramm, CSV (falls diese Option gewählt wurde)
+- Wie Planer es verwenden würden (Beispiel: Aktionswochen, Feiertage, Ölpreisschocks).

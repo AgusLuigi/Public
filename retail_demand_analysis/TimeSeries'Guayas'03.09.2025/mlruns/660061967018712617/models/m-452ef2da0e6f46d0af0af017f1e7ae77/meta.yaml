@@ -1,0 +1,10 @@
+artifact_location: file:///Users/cristallagus/Desktop/GitHub/retail_demand_analysis/mlruns/660061967018712617/models/m-452ef2da0e6f46d0af0af017f1e7ae77/artifacts
+creation_timestamp: 1762305274332
+experiment_id: '660061967018712617'
+last_updated_timestamp: 1762305277158
+model_id: m-452ef2da0e6f46d0af0af017f1e7ae77
+model_type: null
+name: optimized_model
+source_run_id: 848d4ae657174362986a3c24ad7aba19
+status: 2
+status_message: null
