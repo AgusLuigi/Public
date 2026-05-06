@@ -1,0 +1,96 @@
+# config.yaml
+# Zentrale Konfiguration für alle Magic Numbers im Projekt.
+# Laden via: from Favorita_TSA.utils.config import cfg
+
+croston:
+  adi_threshold: 1.32
+  cv2_threshold: 0.49
+
+parquet:
+  target_size_mb: 99
+  sample_rows: 200_000
+  shrink_factor: 0.98
+
+time_series:
+  daily_season_length: 7
+  weekly_season_length: 52
+
+models:
+  gap_threshold: 0.05
+  cv_folds: 3
+  trailing_zero_min_days: 0   # 0 = deaktiviert; >0 = Trimming ab n Nulltagen
+  autoarima:
+    max_p: 3
+    max_q: 3
+    max_d: 2
+    max_P: 2
+    max_Q: 2
+    max_D: 1
+    start_p: 2
+    start_q: 2
+    start_P: 1
+    start_Q: 1
+    grid_p: [1, 2, 3]
+    grid_q: [1, 2, 3]
+    grid_P: [0, 1]
+    grid_Q: [0, 1]
+  sarimax:
+    grid_p: [0, 1, 2]
+    grid_d: [0, 1]
+    grid_q: [0, 1, 2]
+    grid_P: [0, 1]
+    grid_D: [0, 1]
+    grid_Q: [0, 1]
+
+mlflow:
+  experiment: "favorita_baseline_store_item"
+  sarimax_experiment: "favorita_sarimax_store_item"
+  prophet_experiment: "favorita_prophet_store_item"
+  gb_experiment: "favorita_gb_store_item"
+
+holidays:
+  country: "Ecuador"
+  ignore_types: ["Work Day"]
+  ignore_transferred: true
+  scope_days: 5
+  pre_days: 5
+  post_days: 5
+
+analysis:
+  rolling_window: 8
+  rolling_min_periods: 4
+  zscore_threshold: 3.0
+
+ui:
+  default_store: 1
+  top_n_default: 10
+  top_n_min: 5
+  top_n_max: 30
+  sales_density_step: 0.01
+
+defaults:
+  pattern_examples:
+    daily_smooth:
+      store: 25
+      item: 115611
+      season: 7
+      test_weeks: 4
+      model: sarima
+    daily_erratic:
+      store: 44
+      item: 103520
+      season: 7
+      test_weeks: 4
+      model: sarima
+    weekly_smooth:
+      store: 24
+      item: 1503844
+      season: 52
+      test_weeks: 52
+      model: theta
+    weekly_erratic:
+      store: 51
+      item: 1239986
+      season: 52
+      test_weeks: 52
+      model: theta

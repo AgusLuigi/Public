@@ -1,0 +1,173 @@
+# =====================================
+# Python Bytecode / Caches
+# =====================================
+__pycache__/
+*.py[cod]
+*$py.class
+
+# =====================================
+# C extensions
+# =====================================
+*.so
+
+# =====================================
+# Distribution / packaging
+# =====================================
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+*.csv
+
+# =====================================
+# PyInstaller
+# =====================================
+*.manifest
+*.spec
+
+# =====================================
+# Installer logs
+# =====================================
+pip-log.txt
+pip-delete-this-directory.txt
+
+# =====================================
+# Unit test / coverage reports
+# =====================================
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py.cover
+.hypothesis/
+.pytest_cache/
+cover/
+
+# =====================================
+# Documentation
+# =====================================
+docs/_build/
+marimo/_static/
+marimo/_lsp/
+__marimo__/
+
+# =====================================
+# Jupyter / IPython
+# =====================================
+.ipynb_checkpoints
+profile_default/
+ipython_config.py
+
+# =====================================
+# Django / Flask
+# =====================================
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+instance/
+.webassets-cache
+
+# =====================================
+# Scrapy
+# =====================================
+.scrapy
+
+# =====================================
+# IDEs
+# =====================================
+# PyCharm
+.idea/
+# Spyder
+.spyderproject
+.spyproject
+# Rope
+.ropeproject
+# VS Code: keep it committed for team
+# .vscode/
+
+# =====================================
+# Virtual environments
+# =====================================
+.env
+.envrc
+.venv/
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# =====================================
+# Type checkers
+# =====================================
+.mypy_cache/
+.dmypy.json
+dmypy.json
+.pyre/
+.pytype/
+
+# =====================================
+# Cython
+# =====================================
+cython_debug/
+
+# =====================================
+# Ruff Linter
+# =====================================
+.ruff_cache/
+
+# =====================================
+# Cursor AI
+# =====================================
+.cursorignore
+.cursorindexingignore
+
+# =====================================
+# Misc / Other tools
+# =====================================
+.pypirc
+
+# =====================================
+# macOS System Files
+# =====================================
+.DS_Store
+
+# =====================================
+# Working Data Frames
+# =====================================
+/data/processed/preprocessed
+
+# =====================================
+# OPEN_AI_KEY File
+# =====================================
+key.py
+
+# =====================================
+# Warp files
+# =====================================
+warp-skill/
+
+# =====================================
+# Logs
+# =====================================
+streamlit.log

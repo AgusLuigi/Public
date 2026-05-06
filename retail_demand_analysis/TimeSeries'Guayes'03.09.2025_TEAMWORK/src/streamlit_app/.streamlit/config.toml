@@ -1,0 +1,26 @@
+[server]
+headless = true
+runOnSave = false
+fileWatcherType = "poll"
+maxUploadSize = 300
+maxMessageSize = 300
+
+
+[browser]
+gatherUsageStats = false
+
+
+[theme]
+base = "dark"
+backgroundColor = "#0E1117"
+secondaryBackgroundColor = "#161B22"
+textColor = "#E6EAF1"
+font = "sans serif"
+
+
+[runner]
+fastReruns = true
+
+
+[logger]
+level = "warning"
