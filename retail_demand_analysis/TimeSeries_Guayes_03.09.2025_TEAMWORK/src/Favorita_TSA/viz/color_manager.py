@@ -45,24 +45,48 @@ class ColorManager:
     def get_colors(cls, file_path: str | None = None) -> SimpleNamespace:
         """
         Loads COLORS.yaml and creates automatic UI mappings.
-        Improved path logic prevents FileNotFoundError in notebooks.
+        Improved path logic prevents FileNotFoundError in notebooks by anchoring to the project root.
         """
         if cls._colors is None:
-            # ROBUST PATH SEARCH: Checks root first, then one level up
+            # --- CHIRURGISCHE PFAD-LOGIK ---
             if file_path is None:
-                potential_paths = [
-                    os.path.join("configs", "COLORS.yaml"),
-                    os.path.join("..", "configs", "COLORS.yaml"),
-                ]
-                for p in potential_paths:
-                    if os.path.exists(p):
-                        file_path = p
-                        break
+                from pathlib import Path
+                
+                TEAM_FOLDER = "TimeSeries_Guayes_03.09.2025_TEAMWORK"
+                current = Path.cwd().resolve()
+                anchor = None
 
+                # Suche nach oben bis zum Team-Ordner-Anker
+                for parent in [current] + list(current.parents):
+                    if parent.name == TEAM_FOLDER:
+                        anchor = parent
+                        break
+                
+                if anchor:
+                    # Der Pfad laut deinem System: Team-Ordner -> configs -> COLORS.yaml
+                    file_path = str(anchor / "configs" / "COLORS.yaml")
+                else:
+                    # Klassischer Fallback, falls die Struktur abweicht
+                    potential_paths = [
+                        os.path.join("configs", "COLORS.yaml"),
+                        os.path.join("..", "configs", "COLORS.yaml"),
+                    ]
+                    for p in potential_paths:
+                        if os.path.exists(p):
+                            file_path = p
+                            break
+
+            # Letzte Rettung: Absoluter Pfad Check (für deinen User)
             if file_path is None or not os.path.exists(file_path):
-                raise FileNotFoundError(
-                    f"COLORS.yaml could not be found. Checked paths: {['configs/COLORS.yaml', '../configs/COLORS.yaml']}"
-                )
+                alt_path = f"/Users/cristallagus/Desktop/GitHub/Public/retail_demand_analysis/TimeSeries_Guayes_03.09.2025_TEAMWORK/configs/COLORS.yaml"
+                if os.path.exists(alt_path):
+                    file_path = alt_path
+                else:
+                    raise FileNotFoundError(
+                        f"COLORS.yaml konnte nicht gefunden werden. Anker: {TEAM_FOLDER}. "
+                        f"Geprüfter Pfad: {file_path}"
+                    )
+            # -------------------------------
 
             try:
                 with open(file_path, encoding="utf-8") as f:
@@ -102,10 +126,10 @@ class ColorManager:
 
     @classmethod
     def get_raw_dict(cls):
+        # WICHTIG: Sicherstellen, dass get_colors() mit der neuen Logik zuerst läuft
         if cls._raw_dict is None:
             cls.get_colors()
         return cls._raw_dict
-
 
 def apply_modern_theme(fig: go.Figure) -> None:
     """

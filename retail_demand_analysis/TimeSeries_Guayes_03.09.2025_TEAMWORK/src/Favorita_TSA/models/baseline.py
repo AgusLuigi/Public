@@ -400,67 +400,13 @@ def run_baseline_plotly(
     """
     Full baseline pipeline: prepare -> split -> fit primary + SeasonalNaive
     -> evaluate -> build plot -> log to MLflow -> optionally save plot to disk.
-
-    The caller is responsible for configuring the MLflow tracking URI and
-    (optionally) the experiment before calling this function.  If
-    *mlflow_experiment* is provided, ``mlflow.set_experiment()`` is called
-    inside this function as a convenience.
-
-    Run names follow the pattern ``{pattern}_{NNN}_{model_type}``
-    where NNN is a zero-padded sequential number across all runs for that
-    pattern in the current experiment.
-
-    Parameters
-    ----------
-    df : DataFrame
-        Fact-table segment or pre-aggregated weekly DataFrame.
-    pattern : str
-        Human-readable label for this run, e.g. "daily_smooth".
-    store, item : int
-    freq : str
-        Pandas / statsforecast frequency string ("D" or "W").
-    season_length : int
-        Seasonality period passed to Theta / AutoARIMA / SeasonalNaive.
-    test_weeks : int
-        Number of weeks to hold out as the test set.
-    model_type : str
-        "theta" or "sarima".
-    gap_threshold : float
-        Passed through to ``load_and_prepare``.
-    model_params : dict | None
-        Extra keyword arguments forwarded to the primary model constructor.
-
-        For SARIMA (AutoARIMA), accepted keys:
-            d, D, max_p, max_q, max_d, max_P, max_Q, max_D,
-            start_p, start_q, start_P, start_Q,
-            seasonal, information_criterion
-
-        For Theta, accepted keys:
-            decomposition_type  ("multiplicative" | "additive")
-
-        Unknown keys are silently ignored.
-    img_dir : Path | str | None
-        Directory where the forecast plot is saved as an HTML file.
-        The directory is created if it does not exist.
-        File name: ``{run_name}.html``.
-        If None, no file is written.
-    mlflow_experiment : str | None
-        Optional experiment name override.
-
-    Returns
-    -------
-    (results_dict, fig)
-        results_dict contains: pattern, model_type, freq, store, item,
-            season_length, test_weeks, train_size, test_size,
-            mae_primary, r2_primary, mae_naive, r2_naive, improvement_pct,
-            plus all model_params keys prefixed with "param_".
-        fig is the Plotly figure (caller decides whether to call fig.show()
-            or st.plotly_chart(fig)).
     """
+    from Favorita_TSA.utils.mlflow_utils import setup_mlflow
+
     print(f"\n{'=' * 70}\n{pattern.upper()} | {model_type.upper()}\n{'=' * 70}")
 
     experiment_name = mlflow_experiment or "favorita_baseline_store_item"
-    mlflow.set_experiment(experiment_name)
+    setup_mlflow(experiment_name)
 
     _client = MlflowClient()
     _exp = mlflow.get_experiment_by_name(experiment_name)
@@ -480,10 +426,7 @@ def run_baseline_plotly(
     try:
         # 1. Prepare
         ts = load_and_prepare(
-            df,
-            store,
-            item,
-            freq=freq,
+            df, store, item, freq=freq,
             gap_threshold=gap_threshold,
             trailing_zero_min_days=trailing_zero_min_days,
         )
@@ -491,39 +434,27 @@ def run_baseline_plotly(
         # 2. Split
         train, test = train_test_split(ts, test_weeks=test_weeks)
 
-        # 3. Primary model
+        # 3. Primary model (Theta oder SARIMA)
         if model_type == "theta":
             theta_kwargs = {k: v for k, v in model_params.items() if k in _THETA_KEYS}
-            print(
-                f"\nTraining Theta (season_length={season_length}, {theta_kwargs}) ..."
-            )
             model_primary = StatsForecast(
                 models=[Theta(season_length=season_length, **theta_kwargs)],
-                freq=freq,
-                n_jobs=1,
+                freq=freq, n_jobs=1,
             )
             primary_col = "Theta"
         else:
-            arima_kwargs = {
-                k: v for k, v in model_params.items() if k in _AUTOARIMA_KEYS
-            }
-            print(
-                f"\nTraining AutoARIMA (season_length={season_length}, {arima_kwargs}) ..."
-            )
+            arima_kwargs = {k: v for k, v in model_params.items() if k in _AUTOARIMA_KEYS}
             model_primary = StatsForecast(
                 models=[AutoARIMA(season_length=season_length, **arima_kwargs)],
-                freq=freq,
-                n_jobs=1,
+                freq=freq, n_jobs=1,
             )
             primary_col = "AutoARIMA"
 
         model_primary.fit(train)
 
-        # 4. Forecast primary
+        # 4. Forecast & Evaluation
         horizon = len(test)
-        print(f"   Forecasting {horizon} periods ...")
         forecasts_primary = model_primary.predict(h=horizon).reset_index()
-
         test_primary = test.copy()
         test_primary[primary_col] = forecasts_primary[primary_col].values
 
@@ -531,192 +462,62 @@ def run_baseline_plotly(
         preds_primary = test_primary[primary_col].values
         mask = ~np.isnan(actuals) & ~np.isnan(preds_primary)
 
-        if mask.sum() == 0:
-            raise ValueError("All primary-model predictions are NaN.")
-
         mae_primary = mean_absolute_error(actuals[mask], preds_primary[mask])
         r2_primary = r2_score(actuals[mask], preds_primary[mask])
-        print(f"   Primary -- MAE: {mae_primary:.2f} | R2: {r2_primary:.3f}")
 
         # 5. Naive benchmark
-        print("\nTraining SeasonalNaive ...")
-        model_naive = StatsForecast(
-            models=[SeasonalNaive(season_length=season_length)],
-            freq=freq,
-            n_jobs=1,
-        )
+        model_naive = StatsForecast(models=[SeasonalNaive(season_length=season_length)], freq=freq, n_jobs=1)
         model_naive.fit(train)
         forecasts_naive = model_naive.predict(h=horizon).reset_index()
-
         test_naive = test.copy()
         test_naive["SeasonalNaive"] = forecasts_naive["SeasonalNaive"].values
-        preds_naive = test_naive["SeasonalNaive"].values
+        mae_naive = mean_absolute_error(actuals[mask], test_naive["SeasonalNaive"].values[mask])
+        r2_naive = r2_score(actuals[mask], test_naive["SeasonalNaive"].values[mask])
 
-        mae_naive = mean_absolute_error(actuals[mask], preds_naive[mask])
-        r2_naive = r2_score(actuals[mask], preds_naive[mask])
-        print(f"   Naive  -- MAE: {mae_naive:.2f} | R2: {r2_naive:.3f}")
+        improvement = 0.0 if mae_naive == 0 else (mae_naive - mae_primary) / mae_naive * 100
 
-        improvement = (
-            float("nan")
-            if mae_naive == 0
-            else (mae_naive - mae_primary) / mae_naive * 100
-        )
-        print(f"\nImprovement vs Naive: {improvement:+.1f}%")
+        # 6. Plotting (Subplots für Übersicht)
+        fig = make_subplots(rows=2, cols=1, vertical_spacing=0.12)
+        fig.add_trace(go.Scatter(x=train["ds"], y=train["y"], name="Train"), row=1, col=1)
+        fig.add_trace(go.Scatter(x=test_primary["ds"], y=test_primary["y"], name="Actual"), row=1, col=1)
+        fig.add_trace(go.Scatter(x=test_primary["ds"], y=test_primary[primary_col], name=f"{model_type.upper()}", line={"dash": "dash"}), row=1, col=1)
+        # Test-Zoom-Ansicht in Reihe 2
+        fig.add_trace(go.Scatter(x=test_primary["ds"], y=test_primary["y"], showlegend=False), row=2, col=1)
+        fig.add_trace(go.Scatter(x=test_primary["ds"], y=test_primary[primary_col], showlegend=False, line={"dash": "dash"}), row=2, col=1)
+        fig.update_layout(height=800)
 
-        # 6. Plot
-        model_label = model_type.upper()
-        fig = make_subplots(
-            rows=2,
-            cols=1,
-            subplot_titles=(
-                f"{pattern.upper()} -- {model_label} vs Naive  [{run_name}]",
-                f"Test Period  (Improvement: {improvement:+.1f}%)",
-            ),
-            vertical_spacing=0.12,
-        )
-        fig.add_trace(
-            go.Scatter(
-                x=train["ds"], y=train["y"], mode="lines", name="Train", opacity=0.6
-            ),
-            row=1,
-            col=1,
-        )
-        fig.add_trace(
-            go.Scatter(
-                x=test_primary["ds"],
-                y=test_primary["y"],
-                mode="lines+markers",
-                name="Actual",
-            ),
-            row=1,
-            col=1,
-        )
-        fig.add_trace(
-            go.Scatter(
-                x=test_primary["ds"],
-                y=test_primary[primary_col],
-                mode="lines+markers",
-                name=f"{model_label} (MAE={mae_primary:.1f})",
-                line={"dash": "dash"},
-            ),
-            row=1,
-            col=1,
-        )
-        fig.add_trace(
-            go.Scatter(
-                x=test_naive["ds"],
-                y=test_naive["SeasonalNaive"],
-                mode="lines+markers",
-                name=f"Naive (MAE={mae_naive:.1f})",
-                line={"dash": "dot"},
-            ),
-            row=1,
-            col=1,
-        )
-        fig.add_trace(
-            go.Scatter(
-                x=test_primary["ds"],
-                y=test_primary["y"],
-                mode="lines+markers",
-                showlegend=False,
-            ),
-            row=2,
-            col=1,
-        )
-        fig.add_trace(
-            go.Scatter(
-                x=test_primary["ds"],
-                y=test_primary[primary_col],
-                mode="lines+markers",
-                showlegend=False,
-                line={"dash": "dash"},
-            ),
-            row=2,
-            col=1,
-        )
-        fig.add_trace(
-            go.Scatter(
-                x=test_naive["ds"],
-                y=test_naive["SeasonalNaive"],
-                mode="lines+markers",
-                showlegend=False,
-                line={"dash": "dot"},
-            ),
-            row=2,
-            col=1,
-        )
-        fig.update_xaxes(title_text="Date")
-        fig.update_yaxes(title_text="Sales")
-        fig.update_layout(height=800, hovermode="x unified")
-
-        # 7. Save plot to disk
-        if img_dir is not None:
-            img_path = Path(img_dir)
-            img_path.mkdir(parents=True, exist_ok=True)
-            html_file = img_path / f"{run_name}.html"
-            fig.write_html(str(html_file))
-            print(f"   Plot saved: {html_file}")
-
-        # 8. Build result dicts
-        pred_table = test_primary[["ds", "y"]].rename(columns={"y": "actual"}).copy()
-        pred_table["pred_primary"] = test_primary[primary_col].values
-        pred_table["pred_naive"] = test_naive["SeasonalNaive"].values
-        pred_table["error_primary"] = pred_table["actual"] - pred_table["pred_primary"]
-        pred_table["error_naive"] = pred_table["actual"] - pred_table["pred_naive"]
-        pred_table["pattern"] = pattern
-        pred_table["model_type"] = model_type
-        pred_table["store_nbr"] = store
-        pred_table["item_nbr"] = item
-        pred_table["freq"] = freq
-        pred_table["season_length"] = season_length
-        pred_table["test_weeks"] = test_weeks
-        pred_table["ds"] = pd.to_datetime(pred_table["ds"]).dt.strftime("%Y-%m-%d")
-
+        # 7. MLflow Logging
         params = {
-            "pattern": pattern,
-            "model_type": model_type,
-            "freq": freq,
-            "store": store,
-            "item": item,
-            "season_length": season_length,
-            "test_weeks": test_weeks,
-            "trailing_zero_min_days": trailing_zero_min_days,
+            "pattern": pattern, "model_type": model_type, "store": store, "item": item,
             **{f"mp_{_safe_param_key(k)}": v for k, v in model_params.items()},
         }
         metrics = {
-            "train_size": len(train),
-            "test_size": len(test),
-            "mae_naive": float(mae_naive),
-            "r2_naive": float(r2_naive),
             "mae_primary": float(mae_primary),
+            "mae_naive": float(mae_naive),
             "r2_primary": float(r2_primary),
             "improvement_pct": float(improvement),
+            "test_weeks": test_weeks,
+            "test_size": len(test),
         }
 
-        # 9. Log to MLflow via client (no fluent API — avoids run-stack issues)
-        for key, value in params.items():
-            _client.log_param(_run_id, key, str(value))
-        for key, value in metrics.items():
-            _client.log_metric(_run_id, key, float(value))
+        mlflow_metrics = {k: v for k, v in metrics.items() if isinstance(v, float)}
+        mlflow_params = {**params, **{k: v for k, v in metrics.items() if not isinstance(v, float)}}
+        for k, v in mlflow_params.items(): _client.log_param(_run_id, k, str(v))
+        for k, v in mlflow_metrics.items(): _client.log_metric(_run_id, k, v)
 
+        # Artefakte (Plots & Tabellen) speichern
         with tempfile.TemporaryDirectory() as _tmp:
             _fig_path = Path(_tmp) / "forecast.html"
             fig.write_html(str(_fig_path))
             _client.log_artifact(_run_id, str(_fig_path), artifact_path="plots")
 
-            _tbl_path = Path(_tmp) / "predictions.json"
-            pred_table.to_json(str(_tbl_path), orient="records", date_format="iso")
-            _client.log_artifact(_run_id, str(_tbl_path), artifact_path="tables")
-
         _client.set_terminated(_run_id, "FINISHED")
-        print(f"   MLflow run finished: {run_name}")
 
     except Exception:
         _client.set_terminated(_run_id, "FAILED")
         raise
 
     return {**params, **metrics}, fig
-
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Grid Search CV

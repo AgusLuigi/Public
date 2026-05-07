@@ -6,7 +6,7 @@ import pandas as pd
 
 from Favorita_TSA.utils.data_loader import df_to_parquet, parquet_loader, parquet_save
 from Favorita_TSA.utils.dataset import Dataset, PreDataset
-from Favorita_TSA.utils.paths import PREPROCESSED_DIR
+from Favorita_TSA.utils.paths import PREPROCESSED_DIR, METRICS_DIR
 
 
 def create_fact_table():
@@ -153,3 +153,25 @@ def save_monthlys():
 # Item Level - Daily, Weekly, Monthly Aggregations
 # Store Level - Daily, Weekly, Monthly Aggregations
 # Item + Store Level - Daily, Weekly, Monthly Aggregations
+
+# =============================================================================
+# Initialisierungs-Logik
+# =============================================================================
+
+def create_time_series_tables():
+    """
+    Erstellt die notwendige Infrastruktur und generiert alle Tabellen.
+    """
+    for folder in [PREPROCESSED_DIR, METRICS_DIR]:
+        if not folder.exists():
+            folder.mkdir(parents=True, exist_ok=True)
+    try:
+        save_fact_table()
+        save_dailys()
+        save_weeklys()
+        save_monthlys()
+    except Exception as e:
+        print(f"❌ Fehler bei der Initialisierung: {e}")
+
+# Falls du die Datei als Skript ausführst, wird die Initialisierung gestartet
+#create_time_series_tables()
