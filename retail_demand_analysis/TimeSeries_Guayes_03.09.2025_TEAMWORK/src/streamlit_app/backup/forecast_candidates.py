@@ -1,16 +1,20 @@
 from __future__ import annotations
-
+import sys
+from pathlib import Path
 import pandas as pd
 import streamlit as st
+
+# 1. PFAD-LOGIK (Chirurgisch hinzugefügt für Unterordner-Struktur)
+# Da diese Datei in src/streamlit_app/pages/ liegt, gehen wir 3 Ebenen hoch zum Root
+ROOT = Path(__file__).resolve().parents[3]
+if str(ROOT / "src") not in sys.path:
+    sys.path.append(str(ROOT / "src"))
 
 from Favorita_TSA.utils.dataset import PreDataset
 from Favorita_TSA.utils.preprocess_data import load_table
 
-# If your app.py already sets the Plotly theme globally, nothing needed here.
-
-st.set_page_config(page_title="Forecast Candidates", layout="wide")
+# 2. UI SETUP (Config entfernt, da diese zentral in app.py gesteuert wird)
 st.title("🔎 Forecast Candidates (Store-Item) — Table View")
-
 
 # -----------------------------
 # Cached data loading
@@ -18,21 +22,16 @@ st.title("🔎 Forecast Candidates (Store-Item) — Table View")
 @st.cache_data(show_spinner=True)
 def load_store_item_daily() -> pd.DataFrame:
     df = load_table(PreDataset.STORE_ITEM_DAILY).copy()
-
-    # Ensure types
     df["date"] = pd.to_datetime(df["date"])
-    # Guard against missing columns
+    
     required = {"store_nbr", "item_nbr", "date", "unit_sales_sum"}
     missing = required - set(df.columns)
     if missing:
         raise ValueError(f"Missing columns in STORE_ITEM_DAILY: {sorted(missing)}")
-
     return df
-
 
 @st.cache_data(show_spinner=True)
 def build_store_item_summary(df: pd.DataFrame) -> pd.DataFrame:
-    # Global date range (for coverage)
     global_start = df["date"].min()
     global_end = df["date"].max()
     global_days = (global_end - global_start).days + 1
@@ -42,11 +41,7 @@ def build_store_item_summary(df: pd.DataFrame) -> pd.DataFrame:
     summary = g.agg(
         first_date=("date", "min"),
         last_date=("date", "max"),
-        n_rows=(
-            "date",
-            "size",
-        ),  # number of daily records for this pair (should be ~days active)
-        n_days_observed=("date", "nunique"),  # unique days present in this aggregate
+        n_days_observed=("date", "nunique"),
         total_units=("unit_sales_sum", "sum"),
         mean_units=("unit_sales_sum", "mean"),
         std_units=("unit_sales_sum", "std"),
@@ -55,85 +50,39 @@ def build_store_item_summary(df: pd.DataFrame) -> pd.DataFrame:
         n_days_zero=("unit_sales_sum", lambda s: (s <= 0).sum()),
     )
 
-    # Derived metrics
-    summary["active_span_days"] = (
-        summary["last_date"] - summary["first_date"]
-    ).dt.days + 1
+    summary["active_span_days"] = (summary["last_date"] - summary["first_date"]).dt.days + 1
     summary["coverage_global"] = summary["n_days_observed"] / float(global_days)
-    summary["sell_through"] = summary["n_days_sold"] / summary["n_days_observed"].clip(
-        lower=1
-    )
-    summary["zero_share"] = summary["n_days_zero"] / summary["n_days_observed"].clip(
-        lower=1
-    )
-
-    # Stability proxy (lower is better): Coefficient of Variation (CV)
-    # Avoid div by 0
+    summary["sell_through"] = summary["n_days_sold"] / summary["n_days_observed"].clip(lower=1)
+    summary["zero_share"] = summary["n_days_zero"] / summary["n_days_observed"].clip(lower=1)
     summary["cv"] = summary["std_units"] / summary["mean_units"].replace(0, pd.NA)
 
-    # Clean up NaNs
     summary["std_units"] = summary["std_units"].fillna(0.0)
-    summary["cv"] = summary["cv"].fillna(pd.NA)
-
-    # Helpful ordering
-    summary = summary.sort_values(["total_units"], ascending=False).reset_index(
-        drop=True
-    )
-
-    # Format-friendly columns
+    summary = summary.sort_values(["total_units"], ascending=False).reset_index(drop=True)
     summary["first_date"] = summary["first_date"].dt.date
     summary["last_date"] = summary["last_date"].dt.date
 
     return summary
 
-
-df = load_store_item_daily()
-summary = build_store_item_summary(df)
+# Daten laden
+df_raw = load_store_item_daily()
+summary = build_store_item_summary(df_raw)
 
 # -----------------------------
 # Sidebar filters
 # -----------------------------
 with st.sidebar:
-    st.header("Filters")
-
-    # Fast coarse filters
-    min_total_units = st.number_input(
-        "Min total units", min_value=0.0, value=0.0, step=100.0
-    )
+    st.header("🎯 Filter-Logik")
+    min_total_units = st.number_input("Min total units", min_value=0.0, value=0.0, step=100.0)
     min_days_sold = st.number_input("Min days sold", min_value=0, value=0, step=10)
     min_coverage = st.slider("Min global coverage", 0.0, 1.0, 0.0, 0.01)
     max_zero_share = st.slider("Max zero share", 0.0, 1.0, 1.0, 0.01)
 
-    # Optional focus filters
-    store_pick = st.selectbox(
-        "Store (optional)",
-        options=[None, *sorted(summary["store_nbr"].unique())],
-        index=0,
-        key="fc_store_pick",
-    )
-    item_pick = st.selectbox(
-        "Item (optional)",
-        options=[None, *sorted(summary["item_nbr"].unique())],
-        index=0,
-        key="fc_item_pick",
-    )
+    store_pick = st.selectbox("Store (optional)", options=[None, *sorted(summary["store_nbr"].unique())], index=0)
+    item_pick = st.selectbox("Item (optional)", options=[None, *sorted(summary["item_nbr"].unique())], index=0)
 
-    # Display controls
+    st.divider()
     top_n = st.slider("Rows to show", 100, 5000, 500, 100)
-    sort_by = st.selectbox(
-        "Sort by",
-        options=[
-            "total_units",
-            "n_days_sold",
-            "sell_through",
-            "coverage_global",
-            "zero_share",
-            "cv",
-            "max_units",
-        ],
-        index=0,
-        key="fc_sort_by",
-    )
+    sort_by = st.selectbox("Sort by", options=["total_units", "n_days_sold", "sell_through", "coverage_global", "zero_share", "cv", "max_units"], index=0)
     sort_asc = st.checkbox("Sort ascending", value=False)
 
 # -----------------------------
@@ -190,11 +139,7 @@ display_cols = [
     "max_units",
 ]
 
-st.dataframe(
-    f[display_cols],
-    use_container_width=True,
-    hide_index=True,
-)
+st.dataframe(f[display_cols],use_container_width=True,hide_index=True,)
 
 st.caption(
     "Tip: use filters to find candidates that have (1) enough sold days, "

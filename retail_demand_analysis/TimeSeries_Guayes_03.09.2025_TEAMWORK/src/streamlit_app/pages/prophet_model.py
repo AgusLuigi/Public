@@ -1,22 +1,24 @@
 """
 prophet_model.py
 
-Interaktive Streamlit-Seite fuer Prophet-Modellierung mit optionalen Regressoren.
-Manuelle Einstellung der Prophet-Parameter (changepoint_prior_scale,
-seasonality_prior_scale). Feature-Gruppen koennen per Checkbox selektiert werden.
-
-Voraussetzung:
-  - data/metrics/*.parquet vorhanden (Forecastability-Matrizen)
-  - data/processed/*.parquet vorhanden (Oil, Transactions, Stores, Items)
+Interaktive Streamlit-Seite fuer Prophet-Modellierung.
+Modularisierte Version mit robuster Pfad-Logik und zentralen Komponenten.
 """
 
 from __future__ import annotations
 
 import os
+import sys
+from pathlib import Path
 
 import mlflow
 import pandas as pd
 import streamlit as st
+
+# Logic for Folder
+ROOT = Path(__file__).resolve().parents[2]
+if str(ROOT) not in sys.path:
+    sys.path.append(str(ROOT))
 
 from Favorita_TSA.features.sarima_features import load_sarimax_segment
 from Favorita_TSA.models.prophet_model import run_prophet_plotly
@@ -25,339 +27,76 @@ from Favorita_TSA.utils.mlflow_utils import setup_mlflow
 from Favorita_TSA.utils.paths import IMG_DIR, MLRUNS_DIR
 from Favorita_TSA.viz.ploty_theme import set_plotly_theme
 
-# ─────────────────────────────────────────────────────────────────────────────
-# Seiten-Konfiguration
-# ─────────────────────────────────────────────────────────────────────────────
+# UI Components
+from streamlit_app.components.charts import render_plotly
+from streamlit_app.components.metrics_row import render_metrics_row
+from streamlit_app.components.filters import render_store_item_selector
 
+# CONFIGURATION & DATAS
 st.set_page_config(layout="wide", page_title="Prophet Model")
 set_plotly_theme()
-
-os.chdir(MLRUNS_DIR.parent.parent)  # PROJECT_ROOT
+os.chdir(ROOT)
 
 EXPERIMENT = getattr(cfg.mlflow, "prophet_experiment", "favorita_prophet_store_item")
 
-_pe = cfg.defaults.pattern_examples
-PATTERN_DEFAULTS: dict[str, dict] = {
-    "daily_smooth": vars(_pe.daily_smooth),
-    "daily_erratic": vars(_pe.daily_erratic),
-    "weekly_smooth": vars(_pe.weekly_smooth),
-    "weekly_erratic": vars(_pe.weekly_erratic),
-}
-
-# ─────────────────────────────────────────────────────────────────────────────
 # Feature-Gruppen
-# ─────────────────────────────────────────────────────────────────────────────
-
 FEATURE_GROUPS: dict[str, list[str]] = {
     "Holidays": ["is_holiday_or_event", "pre_holiday", "post_holiday"],
-    "Oil Price": [
-        "oil_price",
-        "oil_price_ma7",
-        "oil_price_ma28",
-        "oil_price_pct_change",
-    ],
-    "Calendar": [
-        "is_weekend",
-        "is_payday",
-        "is_month_start",
-        "is_month_end",
-        "days_to_next_holiday",
-        "days_since_last_holiday",
-    ],
-    "Transactions": ["transactions", "transactions_ma7", "transactions_z_score"],
-    "Promotion": ["onpromotion", "promo_streak", "promo_rate_7d"],
-    "Store / Item": ["store_cluster", "perishable", "store_type", "family"],
+    "Oil Price": ["oil_price", "oil_price_ma7", "oil_price_ma28"],
+    "Transactions": ["transactions", "transactions_ma7"],
+    "Promotion": ["onpromotion", "promo_streak"],
 }
 
-# ─────────────────────────────────────────────────────────────────────────────
-# Caching
-# ─────────────────────────────────────────────────────────────────────────────
-
-
-@st.cache_data(
-    show_spinner="Lade und enriche Segment-Daten (einmalig, kann ~60 s dauern) ..."
-)
+@st.cache_data(show_spinner="Lade Segment-Daten...")
 def _load_segment(pattern: str) -> pd.DataFrame:
     return load_sarimax_segment(pattern)
-
 
 @st.cache_data(ttl=15, show_spinner=False)
 def _load_mlflow_runs() -> pd.DataFrame:
     setup_mlflow(EXPERIMENT)
     try:
-        runs = mlflow.search_runs(
-            experiment_names=[EXPERIMENT],
-            order_by=["start_time DESC"],
-        )
+        runs = mlflow.search_runs(experiment_names=[EXPERIMENT], order_by=["start_time DESC"])
+        return runs if not runs.empty else pd.DataFrame()
     except Exception:
         return pd.DataFrame()
 
-    wanted = [
-        "run_id",
-        "tags.mlflow.runName",
-        "params.pattern",
-        "params.store",
-        "params.item",
-        "params.freq",
-        "params.changepoint_prior_scale",
-        "params.seasonality_prior_scale",
-        "params.n_exog_features",
-        "metrics.mae_primary",
-        "metrics.mae_naive",
-        "metrics.r2_primary",
-        "metrics.improvement_pct",
-        "start_time",
-    ]
-    existing = [c for c in wanted if c in runs.columns]
-    return runs[existing].head(30)
+# UI-LOGIK
+def render_prophet_params():
+    """Rendert die Prophet-spezifischen Hyperparameter."""
+    st.subheader("Prophet Hyperparameter")
+    c1, c2 = st.columns(2)
+    cp_scale = c1.slider("Changepoint Prior Scale", 0.001, 0.5, 0.05, format="%.3f")
+    season_scale = c2.slider("Seasonality Prior Scale", 0.01, 10.0, 10.0)
+    return cp_scale, season_scale
 
+def render_exog_selector(is_daily: bool):
+    """Rendert die Regressoren-Auswahl."""
+    st.subheader("Exogene Regressoren")
+    selected = []
+    with st.expander("Regressoren wählen", expanded=False):
+        for g_name, g_cols in FEATURE_GROUPS.items():
+            st.markdown(f"**{g_name}**")
+            cols = st.columns(min(len(g_cols), 4))
+            for i, feat in enumerate(g_cols):
+                with cols[i % len(cols)]:
+                    if st.checkbox(feat, key=f"prophet_feat_{feat}"):
+                        selected.append(feat)
+    return selected
 
-# ─────────────────────────────────────────────────────────────────────────────
-# Seiten-Layout
-# ─────────────────────────────────────────────────────────────────────────────
-
-st.title("Prophet Model")
-st.caption(
-    "Facebook Prophet mit optionalen exogenen Regressoren - "
-    "alle Runs werden in MLflow und img/mlflow/ gespeichert."
-)
-
-st.divider()
-
-# ── Daten-Auswahl ─────────────────────────────────────────────────────────────
-
-st.subheader("Daten")
-
-col_pat, col_store, col_item, col_test, col_trim, col_season = st.columns(6)
-
-with col_pat:
-    pattern = st.selectbox(
-        "Demand Pattern",
-        options=list(PATTERN_DEFAULTS.keys()),
-        index=0,
-    )
-
-defaults = PATTERN_DEFAULTS[pattern]
-is_daily = "daily" in pattern
-is_weekly = not is_daily
-_default_season = defaults["season"]
-
-with col_store:
-    store = st.number_input(
-        "Store Nr.",
-        min_value=1,
-        max_value=54,
-        value=defaults["store"],
-        step=1,
-    )
-
-with col_item:
-    item = st.number_input(
-        "Item Nr.",
-        min_value=1,
-        value=defaults["item"],
-        step=1,
-    )
-
-with col_test:
-    test_weeks = st.slider(
-        "Test Weeks",
-        min_value=1,
-        max_value=52,
-        value=defaults["test_weeks"],
-        help="Anzahl der Wochen im Test-Set",
-    )
-
-with col_trim:
-    trim_days = st.slider(
-        "Trim Zero-Phase",
-        min_value=0,
-        max_value=90,
-        value=0,
-        step=5,
-        format="%d Tage",
-        disabled=is_weekly,
-        help="Entfernt den letzten langen Null-Block. Nur fuer Daily relevant.",
-    )
-trailing_zero_min_days = int(trim_days) if is_daily else 0
-
-with col_season:
-    s_val = st.slider(
-        "s (Saison-Benchmark)",
-        min_value=1,
-        max_value=52,
-        value=_default_season,
-        help="Saisonalitaets-Periode fuer SeasonalNaive-Benchmark",
-    )
-
-st.divider()
-
-# ── Exogene Regressoren ───────────────────────────────────────────────────────
-
-st.subheader("Exogene Regressoren")
-st.caption(
-    "Waehle die exogenen Regressoren fuer Prophet. "
-    "Bei woechentlichem Pattern wird `is_weekend` automatisch ausgeblendet."
-)
-
-selected_features: list[str] = []
-
-with st.expander("Feature-Gruppen auswaehlen", expanded=True):
-    for group_name, group_cols in FEATURE_GROUPS.items():
-        display_cols = (
-            group_cols if is_daily else [c for c in group_cols if c != "is_weekend"]
-        )
-        if not display_cols:
-            continue
-
-        def _make_select_all_callback(gname: str, cols: list[str]):
-            def _cb():
-                new_val = st.session_state[f"p_all_{gname}"]
-                for feat in cols:
-                    st.session_state[f"p_feat_{gname}_{feat}"] = new_val
-
-            return _cb
-
-        g_col1, g_col2 = st.columns([1, 5])
-        with g_col1:
-            st.checkbox(
-                "Alle",
-                key=f"p_all_{group_name}",
-                value=False,
-                on_change=_make_select_all_callback(group_name, display_cols),
-                help=f"Alle Features der Gruppe '{group_name}' auswaehlen",
-            )
-        with g_col2:
-            st.markdown(f"**{group_name}**")
-            feat_cols_ui = st.columns(min(len(display_cols), 4))
-            for i, feat in enumerate(display_cols):
-                with feat_cols_ui[i % len(feat_cols_ui)]:
-                    checked = st.checkbox(feat, key=f"p_feat_{group_name}_{feat}")
-                    if checked:
-                        selected_features.append(feat)
-
-st.caption(
-    f"Ausgewaehlte Regressoren ({len(selected_features)}): "
-    + (
-        ", ".join(selected_features)
-        if selected_features
-        else "- keine (reines Prophet) -"
-    )
-)
-
-st.divider()
-
-# ── Prophet-Parameter ─────────────────────────────────────────────────────────
-
-st.subheader("Prophet Parameter")
-
-p_col1, p_col2 = st.columns(2)
-
-with p_col1:
-    changepoint_prior_scale = st.slider(
-        "changepoint_prior_scale",
-        min_value=0.001,
-        max_value=0.5,
-        value=0.05,
-        step=0.005,
-        format="%.3f",
-        help="Regulierungsstaerke fuer Trend-Changepoints. Hoeher = flexiblerer Trend.",
-    )
-
-with p_col2:
-    seasonality_prior_scale = st.slider(
-        "seasonality_prior_scale",
-        min_value=0.01,
-        max_value=50.0,
-        value=10.0,
-        step=0.5,
-        format="%.1f",
-        help="Regulierungsstaerke fuer Saisonalitaets-Komponenten.",
-    )
-
-st.divider()
-
-# ── Run-Button ────────────────────────────────────────────────────────────────
-
-run_button = st.button("Run Prophet", type="primary", use_container_width=False)
-
-# ── Training ──────────────────────────────────────────────────────────────────
-
-if run_button:
-    setup_mlflow(EXPERIMENT)
-    with st.spinner(
-        f"Trainiere Prophet auf {pattern} (store={store}, item={item}) ..."
-    ):
-        try:
-            df = _load_segment(pattern)
-            results, fig = run_prophet_plotly(
-                df=df,
-                pattern=pattern,
-                store=int(store),
-                item=int(item),
-                freq="D" if is_daily else "W",
-                season_length=int(s_val),
-                test_weeks=int(test_weeks),
-                feature_cols=selected_features,
-                changepoint_prior_scale=float(changepoint_prior_scale),
-                seasonality_prior_scale=float(seasonality_prior_scale),
-                trailing_zero_min_days=trailing_zero_min_days,
-                img_dir=IMG_DIR,
-            )
-            st.session_state["prophet_results"] = results
-            st.session_state["prophet_fig"] = fig
-            _load_mlflow_runs.clear()
-        except Exception as exc:
-            if mlflow.active_run() is not None:
-                mlflow.end_run()
-            st.error(f"Fehler beim Prophet-Training: {exc}")
-            st.exception(exc)
-
-# ── Ergebnisse ────────────────────────────────────────────────────────────────
-
-if "prophet_results" in st.session_state:
-    r = st.session_state["prophet_results"]
-    fig = st.session_state["prophet_fig"]
-
+def render_history():
+    """Stellt die MLflow Historie mit der originalen Rename-Map dar."""
     st.divider()
-    st.subheader("Ergebnisse")
+    st.subheader("MLflow Run History - Prophet")
+    runs_df = _load_mlflow_runs()
+    if runs_df.empty:
+        st.info("Keine Runs gefunden.")
+        return
 
-    m1, m2, m3, m4, m5, m6 = st.columns(6)
-    m1.metric("MAE Prophet", f"{r['mae_primary']:.2f}")
-    m2.metric("MAE Naive", f"{r['mae_naive']:.2f}")
-    m3.metric("R2 Prophet", f"{r['r2_primary']:.3f}")
-    m4.metric(
-        "Verbesserung",
-        f"{r['improvement_pct']:+.1f}%",
-        delta=f"{r['improvement_pct']:.1f}%",
-        delta_color="normal",
-    )
-    m5.metric("Train / Test", f"{r['train_size']} / {r['test_size']}")
-    m6.metric("Regressoren", r["n_regressors"])
-
-    st.plotly_chart(fig, use_container_width=True)
-
-# ── MLflow Run History ────────────────────────────────────────────────────────
-
-st.divider()
-st.subheader("MLflow Run History - Prophet")
-
-btn_col, _ = st.columns([1, 5])
-with btn_col:
-    if st.button("Aktualisieren"):
-        _load_mlflow_runs.clear()
-
-runs_df = _load_mlflow_runs()
-
-if runs_df.empty:
-    st.info("Noch keine Prophet-Runs gefunden. Starte ein Modell oben.")
-else:
     rename_map = {
         "tags.mlflow.runName": "Run Name",
         "params.pattern": "Pattern",
         "params.store": "Store",
         "params.item": "Item",
-        "params.freq": "Freq",
         "params.changepoint_prior_scale": "CP Scale",
         "params.seasonality_prior_scale": "Season Scale",
         "params.n_exog_features": "Regressoren #",
@@ -367,25 +106,72 @@ else:
         "metrics.improvement_pct": "Improvement %",
         "start_time": "Zeitpunkt",
     }
-    display_df = runs_df.rename(columns=rename_map)
-
+    
+    display_df = runs_df.rename(columns={c: v for c, v in rename_map.items() if c in runs_df.columns})
+    
+    # Formatierung (Logik-Erhalt)
     for col in ["MAE (Prophet)", "MAE (Naive)"]:
         if col in display_df.columns:
-            display_df[col] = display_df[col].map(
-                lambda x: f"{x:.2f}" if pd.notna(x) else "-"
-            )
+            display_df[col] = display_df[col].map(lambda x: f"{x:.2f}" if pd.notna(x) else "-")
     if "R2" in display_df.columns:
-        display_df["R2"] = display_df["R2"].map(
-            lambda x: f"{x:.3f}" if pd.notna(x) else "-"
-        )
+        display_df["R2"] = display_df["R2"].map(lambda x: f"{x:.3f}" if pd.notna(x) else "-")
     if "Improvement %" in display_df.columns:
-        display_df["Improvement %"] = display_df["Improvement %"].map(
-            lambda x: f"{x:+.1f}%" if pd.notna(x) else "-"
-        )
-    if "Zeitpunkt" in display_df.columns:
-        display_df["Zeitpunkt"] = pd.to_datetime(display_df["Zeitpunkt"]).dt.strftime(
-            "%Y-%m-%d %H:%M"
-        )
+        display_df["Improvement %"] = display_df["Improvement %"].map(lambda x: f"{x:+.1f}%" if pd.notna(x) else "-")
+        
+    st.dataframe(display_df[[c for c in display_df.columns if c != "run_id"]].head(20), use_container_width=True)
 
-    cols_to_show = [c for c in display_df.columns if c != "run_id"]
-    st.dataframe(display_df[cols_to_show], use_container_width=True, hide_index=True)
+# MAIN
+def main():
+    st.title("Prophet Model")
+    st.caption("Facebook Prophet mit optionalen exogenen Regressoren.")
+
+    # Filter
+    pattern = st.selectbox("Demand Pattern", options=list(cfg.defaults.pattern_examples.__dict__.keys()))
+    defaults = vars(getattr(cfg.defaults.pattern_examples, pattern))
+    is_daily = "daily" in pattern
+    
+    store, item = render_store_item_selector(default_store=defaults["store"], default_item=defaults["item"])
+    test_weeks = st.slider("Test Weeks", 1, 52, defaults["test_weeks"])
+
+    st.divider()
+
+    # Parameter & Regressoren
+    cp_scale, season_scale = render_prophet_params()
+    selected_features = render_exog_selector(is_daily)
+
+    # Training
+    if st.button("Run Prophet", type="primary", use_container_width=True):
+        setup_mlflow(EXPERIMENT)
+        with st.spinner("Prophet trainiert..."):
+            try:
+                df_seg = _load_segment(pattern)
+                results, fig = run_prophet_plotly(
+                    df=df_seg, store=store, item=item, pattern=pattern,
+                    test_weeks=test_weeks, freq="D" if is_daily else "W",
+                    changepoint_prior_scale=cp_scale,
+                    seasonality_prior_scale=season_scale,
+                    exog_cols=selected_features,
+                    img_dir=IMG_DIR
+                )
+                st.session_state["prophet_res"] = results
+                st.session_state["prophet_fig"] = fig
+                _load_mlflow_runs.clear()
+            except Exception as e:
+                st.error(f"Fehler: {e}")
+
+    # Ergebnisse
+    if "prophet_res" in st.session_state:
+        r = st.session_state["prophet_res"]
+        st.divider()
+        render_metrics_row(
+            labels=["MAE Prophet", "MAE Naive", "R2", "Verbesserung", "Regressoren"],
+            values=[f"{r['mae_primary']:.2f}", f"{r['mae_naive']:.2f}", f"{r['r2_primary']:.3f}",
+                    f"{r['improvement_pct']:+.1f}%", str(r.get('n_exog_features', 0))]
+        )
+        render_plotly(st.session_state["prophet_fig"])
+
+    # History
+    render_history()
+
+if __name__ == "__main__":
+    main()

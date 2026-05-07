@@ -1,350 +1,249 @@
 import sys
 from pathlib import Path
 
+# --- 1. DYNAMISCHE PFAD-LOGIK (Aufwärtssuche) ---
+CURRENT_FILE = Path(__file__).resolve()
+ROOT = CURRENT_FILE.parents[2] 
+
+SRC_PATH = str(ROOT / "src")
+if SRC_PATH not in sys.path:
+    sys.path.insert(0, SRC_PATH)
+
+for parent in CURRENT_FILE.parents:
+    if str(parent) not in sys.path:
+        sys.path.append(str(parent))
+
 import plotly.io as pio
 import streamlit as st
+import streamlit.components.v1 as components
 
-from Favorita_TSA.viz.ploty_theme import set_plotly_theme
+# Import der Themes mit Favorita-Struktur
+try:
+    from Favorita_TSA.viz.ploty_theme import set_plotly_theme
+    from Favorita_TSA.viz.streamlit_theme import get_glass_theme
+    set_plotly_theme()
+except ImportError:
+    try:
+        from streamlit_theme import get_glass_theme
+    except ImportError:
+        def get_glass_theme(mode="dark"):
+            if mode == "dark":
+                return {
+                    "mode": "dark", "bg_color": "#05070a", "text_color": "#FFFFFF", 
+                    "panel_bg": "rgba(10, 15, 25, 0.7)", "accent": "#C0C0C0", 
+                    "panel_border": "rgba(255,255,255,0.1)", "glass_blur": "30px", 
+                    "shadow": "rgba(0,0,0,0.9)", "brand_gradient": "linear-gradient(135deg, #a78bfa, #22d3ee)"
+                }
+            return {
+                "mode": "light", "bg_color": "#f8fafc", "text_color": "#0f172a", 
+                "panel_bg": "rgba(255, 255, 255, 0.7)", "accent": "#D4AF37", 
+                "panel_border": "rgba(0,0,0,0.05)", "glass_blur": "25px", 
+                "shadow": "rgba(0,0,0,0.1)", "brand_gradient": "linear-gradient(135deg, #D4AF37, #facc15)"
+            }
 
-ROOT = Path(__file__).resolve().parents[2]
-sys.path.append(str(ROOT / "src"))
-
-set_plotly_theme()
-pio.templates.default = "favorita_dark"
-
+# --- 2. CONFIG ---
 st.set_page_config(
-    page_title="Favorita TSA — System",
-    page_icon="🧊",
+    page_title="Favorita TSA — Futuristic System",
+    page_icon="🚀",
     layout="wide",
-    initial_sidebar_state="collapsed",
+    initial_sidebar_state="expanded",
 )
 
-# ---------- FULLSCREEN STREAMLIT ----------
+if "theme_mode" not in st.session_state:
+    st.session_state.theme_mode = "dark"
+
+# --- 3. SIDEBAR (Command Center) ---
+with st.sidebar:
+    st.title("Settings")
+    toggle = st.toggle("Gold Protocol (Light Mode)", value=(st.session_state.theme_mode == "light"))
+    st.session_state.theme_mode = "light" if toggle else "dark"
+    st.markdown("---")
+    st.title("Navigation")
+    st.info("Work Redy. Render Engine: ACTIVE")
+
+theme = get_glass_theme(st.session_state.theme_mode)
+pio.templates.default = "favorita_dark" if theme.get("mode") == "dark" else "plotly_white"
+
+# --- 4. CSS (FUTURISTIC UI & FIXES) ---
 st.markdown(
-    """
+    f"""
     <style>
-    .block-container {
-        padding: 0 !important;
-        margin: 0 !important;
-        max-width: 100% !important;
-    }
+    /* Hintergrund-IFrame fixieren */
+    iframe[title="st.component_browser.v1.html_component"] {{
+        position: fixed !important; top: 0; left: 0; width: 100vw; height: 100vh;
+        z-index: -1 !important; pointer-events: none !important; border: none;
+    }}
+    
+    .stApp {{ background-color: transparent !important; }}
+    
+    /* Text-Synchronisation */
+    .stApp, .stMarkdown, p, h1, h2, h3, span, label, .stCaption {{
+        color: {theme['text_color']} !important;
+        text-shadow: 0 2px 4px {theme['shadow']};
+    }}
 
-    footer {visibility: hidden;}
+    /* Sidebar Design mit Blur */
+    section[data-testid="stSidebar"] {{
+        background-color: {theme['bg_color']}CC !important;
+        backdrop-filter: blur(20px);
+        border-right: 1px solid {theme['panel_border']};
+        z-index: 100;
+    }}
 
-    iframe {
-        display: block;
-        border: 0;
-    }
+    header[data-testid="stHeader"] {{ background: transparent !important; }}
+
+    /* Sidebar-Chevron & Header Buttons Fix */
+    button[data-testid="stSidebarCollapse"] svg, 
+    button[kind="headerNoContext"] svg {{
+        fill: {theme['accent']} !important;
+        stroke: {theme['accent']} !important;
+    }}
+    
+    button[data-testid="stSidebarCollapse"],
+    button[kind="headerNoContext"] {{
+        background-color: {theme['panel_bg']} !important;
+        border: 1px solid {theme['panel_border']} !important;
+        z-index: 9999 !important;
+    }}
+
+    /* Öffnen-Pfeil (Collapsed Zustand) */
+    .st-emotion-cache-hp888a {{ color: {theme['accent']} !important; }}
+
+    .block-container {{ padding: 0 !important; max-width: 100% !important; }}
+    footer {{visibility: hidden;}}
     </style>
     """,
     unsafe_allow_html=True,
 )
 
-HTML = r"""
+# --- 5. 4K FUTURISTIC 3D ENGINE (SHARP STARS, PLANET, GROCERY SHARDS) ---
+HTML_CONTENT = f"""
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
 <style>
-html, body {
-  margin: 0;
-  height: 100%;
-  overflow: hidden;
-  font-family: Inter, system-ui, -apple-system, sans-serif;
-  background: transparent;
-}
-
-#bg {
-  position: fixed;
-  inset: 0;
-  z-index: 0;
-}
-
-.stage {
-  position: relative;
-  z-index: 10;
-  height: 100vh;
-  display: grid;
-  place-items: center;
-  padding: 32px;
-}
-
-.panel {
-  width: min(980px, 92vw);
-  padding: 78px 88px;
-  border-radius: 30px;
-  background: rgba(255,255,255,0.055);;
-  backdrop-filter: blur(26px);
-  border: 1px solid rgba(255,255,255,0.12);
-  box-shadow: 0 90px 220px rgba(0,0,0,0.92);
-  overflow: hidden;
-  opacity: 0;
-  transform: translateY(18px) scale(0.97);
-}
-
-.panel::before {
-  content: "";
-  position: absolute;
-  inset: -2px;
-  border-radius: inherit;
-  background: conic-gradient(from 160deg,
-    rgba(167,139,250,0.0),
-    rgba(167,139,250,0.55),
-    rgba(34,211,238,0.55),
-    rgba(74,222,128,0.55),
-    rgba(250,204,21,0.45),
-    rgba(167,139,250,0.55),
-    rgba(167,139,250,0.0)
-  );
-  filter: blur(18px);
-  opacity: 0.35;
-  animation: ring 14s linear infinite;
-  z-index: -1;
-}
-
-@keyframes ring {
-  from { transform: rotate(0deg);}
-  to   { transform: rotate(360deg);}
-}
-
-.kicker {
-  color: rgba(255,255,255,0.62);
-  font-size: 13px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-}
-
-h1 {
-  margin: 16px 0 0 0;
-  font-size: clamp(48px, 6vw, 80px);
-  font-weight: 600;
-  letter-spacing: -0.05em;
-  line-height: 1.05;
-  color: rgba(255,255,255,0.97);
-}
-
-.grad {
-  background: linear-gradient(120deg, #a78bfa, #22d3ee, #4ade80);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-.sub {
-  margin-top: 20px;
-  max-width: 62ch;
-  font-size: 18px;
-  line-height: 1.65;
-  color: rgba(255,255,255,0.62);
-}
-
-.meta {
-  margin-top: 34px;
-  font-size: 14px;
-  color: rgba(255,255,255,0.42);
-}
+html, body {{ margin: 0; height: 100%; overflow: hidden; font-family: Inter, sans-serif; background: {theme['bg_color']}; }}
+#bg {{ position: fixed; inset: 0; z-index: 0; }}
+.stage {{ position: relative; z-index: 10; height: 100vh; display: grid; place-items: center; pointer-events: none; }}
+.panel {{
+  pointer-events: auto;
+  width: min(980px, 92vw); padding: 78px 88px; border-radius: 40px;
+  background: {theme['panel_bg']};
+  backdrop-filter: blur({theme['glass_blur']});
+  border: 1px solid {theme['panel_border']};
+  box-shadow: 0 90px 220px {theme['shadow']};
+  text-align: left; opacity: 0; transform: translateY(20px) scale(0.97);
+  color: {theme['text_color']};
+}}
+.panel::before {{
+  content: ""; position: absolute; inset: -2px; border-radius: inherit;
+  background: conic-gradient(from 160deg, transparent, {theme['accent']}88, #22d3ee88, #4ade8088, transparent);
+  filter: blur(18px); opacity: 0.35; animation: ring 14s linear infinite; z-index: -1;
+}}
+@keyframes ring {{ from {{ transform: rotate(0deg); }} to {{ transform: rotate(360deg); }} }}
+.kicker {{ color: {theme['text_color']}; opacity: 0.6; font-size: 13px; letter-spacing: 0.12em; text-transform: uppercase; }}
+h1 {{ margin: 16px 0 0 0; font-size: clamp(48px, 6vw, 80px); font-weight: 600; line-height: 1.05; }}
+.grad {{ background: {theme['brand_gradient']}; -webkit-background-clip: text; -webkit-text-fill-color: transparent; }}
+.sub {{ margin-top: 20px; max-width: 62ch; font-size: 18px; line-height: 1.65; opacity: 0.7; }}
+.meta {{ margin-top: 34px; font-size: 14px; opacity: 0.5; }}
 </style>
 </head>
-
 <body>
 <canvas id="bg"></canvas>
-
 <div class="stage">
   <div class="panel" id="panel">
     <div class="kicker">RETAIL TIME-SERIES FORECASTING · ML SYSTEM</div>
     <h1><span class="grad">Favorita TSA</span></h1>
-    <div class="sub">
-      End-to-end machine learning pipeline for grocery sales forecasting.
-      Temporal feature engineering, promotion effects and store dynamics
-      modeled through scalable time-series architecture.
-    </div>
+    <div class="sub">End-to-end machine learning pipeline for grocery sales forecasting. Time-series analysis.</div>
     <div class="meta">Patrick · Agus · Kiko</div>
   </div>
 </div>
-
 <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.2/lib/anime.min.js"></script>
-
 <script>
-/* ====== STREAMLIT DARK BASE ====== */
-function getStreamlitBg() {
-  try {
-    const root = window.parent.document.documentElement;
-    const styles = getComputedStyle(root);
-    const c = styles.getPropertyValue("--background-color").trim();
-    if (c) return c;
-  } catch {}
-  return "#0e1117"; // exact Streamlit dark
-}
-
-const bgColor = getStreamlitBg();
-
-/* soften to gray-black tone */
-const fogColor = bgColor;
-document.body.style.background = bgColor;
-
-/* ====== RENDERER ====== */
 const canvas = document.getElementById("bg");
-const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
-renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+const renderer = new THREE.WebGLRenderer({{ canvas, antialias: true, alpha: true }});
+renderer.setPixelRatio(window.devicePixelRatio > 1 ? 2 : 1);
 renderer.setSize(innerWidth, innerHeight);
-renderer.setClearColor(fogColor, 1);
-
-/* ====== SCENE ====== */
-const scene = new THREE.Scene();
-
-renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.0;
 
-const camera = new THREE.PerspectiveCamera(55, innerWidth / innerHeight, 0.1, 100);
-camera.position.set(0, 0.2, 10.5);
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(45, innerWidth/innerHeight, 0.1, 1000);
+camera.position.z = 15;
 
 const group = new THREE.Group();
 scene.add(group);
 
-scene.add(new THREE.AmbientLight(0xcfd6e6, 0.35));
+/* BELEUCHTUNG */
+scene.add(new THREE.AmbientLight(0xffffff, 0.2));
+const sun = new THREE.DirectionalLight('{theme['accent']}', 2);
+sun.position.set(5, 10, 7);
+scene.add(sun);
 
-const key = new THREE.PointLight(0xa78bfa, 1.0, 40);
-key.position.set(5, 4, 10);
-scene.add(key);
-
-const fill = new THREE.PointLight(0x22d3ee, 0.7, 40);
-fill.position.set(-6, -2, 8);
-scene.add(fill);
-
-const rim = new THREE.PointLight(0x4ade80, 0.6, 40);
-rim.position.set(0, 6, -6);
-scene.add(rim);
-
-/* stars */
-const starCount = 1400;
+/* SHARP STARS */
 const starGeo = new THREE.BufferGeometry();
-const starPos = new Float32Array(starCount * 3);
-for (let i = 0; i < starCount; i++) {
-  const ix = i * 3;
-  starPos[ix] = (Math.random() - 0.5) * 60;
-  starPos[ix+1] = (Math.random() - 0.5) * 36;
-  starPos[ix+2] = -Math.random() * 60;
-}
+const starPos = new Float32Array(5000 * 3);
+for(let i=0; i<15000; i++) starPos[i] = (Math.random()-0.5)*300;
 starGeo.setAttribute("position", new THREE.BufferAttribute(starPos, 3));
-const stars = new THREE.Points(
-  starGeo,
-  new THREE.PointsMaterial({ size: 0.03, color: 0xffffff, transparent: true, opacity: 0.45 })
-);
+const stars = new THREE.Points(starGeo, new THREE.PointsMaterial({{ size: 0.15, color: 0xffffff, transparent: true, opacity: 0.8 }}));
 scene.add(stars);
 
-/* core */
-const core = new THREE.Mesh(
-  new THREE.TorusKnotGeometry(1.2, 0.34, 220, 18, 2, 3),
-  new THREE.MeshStandardMaterial({
-    color: 0x161b22,
-    metalness: 0.55,
-    roughness: 0.22,
-    emissive: 0x0b0f14,
-    emissiveIntensity: 0.7
-  })
+/* CORE PLANET */
+const planet = new THREE.Mesh(
+  new THREE.IcosahedronGeometry(4, 15),
+  new THREE.MeshStandardMaterial({{ color: 0x111827, wireframe: true, transparent: true, opacity: 0.2 }})
 );
-group.add(core);
+group.add(planet);
 
-const glow = new THREE.Mesh(
-  new THREE.SphereGeometry(1.95, 48, 48),
-  new THREE.MeshBasicMaterial({
-    color: 0x8b7cff,
-    transparent: true,
-    opacity: 0.06,
-    blending: THREE.AdditiveBlending,
-    depthWrite: false,
-    depthTest: false
-  })
+const innerPlanet = new THREE.Mesh(
+    new THREE.SphereGeometry(3.8, 64, 64),
+    new THREE.MeshStandardMaterial({{ color: 0x030712, emissive: '{theme['accent']}', emissiveIntensity: 0.05 }})
 );
-group.add(glow);
+group.add(innerPlanet);
 
-/* rings */
-function ring(r,c,o){
-  return new THREE.Mesh(
-    new THREE.TorusGeometry(r,0.02,10,300),
-    new THREE.MeshBasicMaterial({ color:c, transparent:true, opacity:o, blending:THREE.AdditiveBlending,   depthWrite:false,
-  depthTest:false })
-  );
-}
-const r1 = ring(2.55,0x22d3ee,0.14); r1.rotation.x=Math.PI*0.5;
-const r2 = ring(2.95,0xa78bfa,0.10); r2.rotation.y=Math.PI*0.35;
-const r3 = ring(3.35,0x4ade80,0.08); r3.rotation.z=Math.PI*0.22;
-group.add(r1,r2,r3);
-
-/* shards */
-const shardGeo = new THREE.BoxGeometry(0.05,0.35,0.05);
-const shardMat = new THREE.MeshBasicMaterial({ color:0xffffff, transparent:true, opacity:0.55, blending:THREE.AdditiveBlending });
-const shards = new THREE.InstancedMesh(shardGeo, shardMat, 90);
-const dummy = new THREE.Object3D();
-const cols = [0xa78bfa,0x22d3ee,0x4ade80,0xfacc15];
-
-for(let i=0;i<90;i++){
-  const a = Math.random()*Math.PI*2;
-  const y = (Math.random()-0.5)*2.2;
-  const r = 3.8+Math.random()*1.6;
-  dummy.position.set(Math.cos(a)*r,y,Math.sin(a)*r);
-  dummy.rotation.set(Math.random()*Math.PI,Math.random()*Math.PI,Math.random()*Math.PI);
-  dummy.scale.setScalar(0.8+Math.random()*1.4);
-  dummy.updateMatrix();
-  shards.setMatrixAt(i,dummy.matrix);
-  shards.setColorAt(i,new THREE.Color(cols[i%cols.length]));
-}
+/* FOOD SHARDS */
+const shards = new THREE.Group();
+const shardGeo = new THREE.OctahedronGeometry(0.3, 0);
+for(let i=0; i<40; i++) {{
+    const mat = new THREE.MeshStandardMaterial({{ color: i%2===0 ? 0x22d3ee : 0xa78bfa, emissiveIntensity: 0.5, transparent: true, opacity: 0.8 }});
+    const m = new THREE.Mesh(shardGeo, mat);
+    const a = Math.random()*Math.PI*2;
+    const r = 6 + Math.random()*4;
+    m.position.set(Math.cos(a)*r, (Math.random()-0.5)*10, Math.sin(a)*r);
+    shards.add(m);
+}}
 group.add(shards);
 
-/* mouse parallax */
-const mouse={x:0,y:0};
-addEventListener("mousemove",e=>{
-  mouse.x=(e.clientX/innerWidth)*2-1;
-  mouse.y=-((e.clientY/innerHeight)*2-1);
-});
+anime({{ targets: "#panel", opacity: [0, 1], translateY: [20, 0], scale: [0.97, 1], duration: 1500, easing: "easeOutExpo" }});
 
-/* panel intro */
-anime({
-  targets:"#panel",
-  opacity:[0,1],
-  translateY:[18,0],
-  scale:[0.97,1],
-  duration:1200,
-  easing:"easeOutExpo"
-});
+const mouse = {{ x: 0, y: 0 }};
+window.addEventListener("mousemove", e => {{ mouse.x=(e.clientX/innerWidth)*2-1; mouse.y=-(e.clientY/innerHeight)*2+1; }});
 
-/* loop */
-function tick(t){
-  const time=t*0.001;
+function tick() {{
+    group.rotation.y += 0.001;
+    shards.rotation.y += 0.002;
+    group.position.x += (mouse.x*0.5 - group.position.x)*0.02;
+    group.position.y += (mouse.y*0.5 - group.position.y)*0.02;
+    renderer.render(scene, camera);
+    requestAnimationFrame(tick);
+}}
+tick();
 
-  const px=mouse.x*0.25;
-  const py=mouse.y*0.18;
-
-  group.rotation.y+=0.0022;
-  group.rotation.x+=0.0012;
-
-  group.position.x+= (px-group.position.x)*0.05;
-  group.position.y+= (py-group.position.y)*0.05;
-
-  r1.rotation.z+=0.0022;
-  r2.rotation.x+=0.0016;
-  r3.rotation.y+=0.0019;
-
-  core.material.emissiveIntensity=0.7+0.35*Math.sin(time*1.2);
-
-  stars.rotation.y+=0.00035;
-  stars.rotation.x+=0.00015;
-
-  renderer.render(scene,camera);
-  requestAnimationFrame(tick);
-}
-requestAnimationFrame(tick);
-
-addEventListener("resize",()=>{
-  renderer.setSize(innerWidth,innerHeight);
-  camera.aspect=innerWidth/innerHeight;
-  camera.updateProjectionMatrix();
-});
+window.addEventListener("resize", () => {{
+    renderer.setSize(innerWidth, innerHeight);
+    camera.aspect = innerWidth/innerHeight;
+    camera.updateProjectionMatrix();
+}});
 </script>
 </body>
 </html>
 """
 
-st.components.v1.html(HTML, height=1200, scrolling=False)
+def main():
+    components.html(HTML_CONTENT, height=1200, scrolling=False)
+    st.write("### System Operational")
+    st.caption(f"Sync: 4K Ultra | Mode: {st.session_state.theme_mode.upper()} | Path: Dynamic")
+
+if __name__ == "__main__":
+    main()
